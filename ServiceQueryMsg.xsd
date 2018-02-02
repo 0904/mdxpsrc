@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://www.qdairport.com/imp/servicequerymsg" xmlns:tns="http://www.qdairport.com/imp/servicequerymsg">
+
+
+    <complexType name="MSG">
+    	<sequence>
+    		<element name="HEAD" type="tns:HEAD"/>
+    		<element name="BODY" type="tns:BODY"/>
+    	</sequence>
+    </complexType>
+    
+    <element name="MSG" type="tns:MSG"/>
+
+    <complexType name="HEAD">
+    	<all>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_ServiceCode" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Version" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Sender_Org" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Sender" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Receiver_Org" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Receiver" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_SessionId" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_SerialNumber" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_SendTimeStamp" type="dateTime"/>
+    	</all>
+    </complexType>
+    
+    <complexType name="BODY">
+    	<all>
+    		<element maxOccurs="1" minOccurs="1" name="Selector" type="tns:Selector">
+    		</element>
+    		<element maxOccurs="1" minOccurs="0" name="Fields" type="tns:Fields">
+    		</element>
+    		<element maxOccurs="1" minOccurs="0" name="Skip" type="int">
+    		</element>
+    		<element maxOccurs="1" minOccurs="0" name="Limit" type="int">
+    		</element>
+    		<element maxOccurs="1" minOccurs="0" name="Sort" type="tns:Sort"/>
+    	</all>
+    </complexType>
+    
+    <complexType name="Selector">
+    	<choice>
+    	  <sequence>
+    	     <element maxOccurs="unbounded" minOccurs="1" name="Field" type="tns:QueryField"/>
+    	     <choice>
+    	         <element maxOccurs="1" minOccurs="0" name="And" type="tns:And"/>
+    	         <element maxOccurs="1" minOccurs="0" name="Or" type="tns:Or"/>
+    	     </choice>
+    	  </sequence>
+    	  <sequence>
+    	      <element maxOccurs="1" minOccurs="1" name="And" type="tns:And"/>  	  
+    	  </sequence>
+    	  <sequence>
+    	      <element maxOccurs="1" minOccurs="1" name="Or" type="tns:Or"/>
+    	  </sequence>
+    	</choice>
+    </complexType>
+    
+    <complexType name="Fields">
+    	<sequence>
+    		<element maxOccurs="unbounded" minOccurs="0" name="field" type="string"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="Sort">
+    	<sequence>
+    		<element maxOccurs="unbounded" minOccurs="0" name="field" type="tns:QueryField"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="SortField">
+    	<all>
+    		<element maxOccurs="1" minOccurs="1" name="name" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="order">
+    			<simpleType>
+    				<restriction base="string">
+    					<enumeration value="asc"/>
+    					<enumeration value="desc"/>
+    				</restriction>
+    			</simpleType>
+    		</element>
+    	</all>
+    </complexType>
+
+
+    <complexType name="QueryField">
+    	<all>
+    		<element maxOccurs="1" minOccurs="1" name="name" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="operator">
+    			<simpleType>
+    				<restriction base="string">
+    					<enumeration value="$lt"/>
+    					<enumeration value="$gt"/>
+    					<enumeration value="$eq"/>
+    					<enumeration value="$gte"/>
+    					<enumeration value="$lte"/>
+    					<enumeration value="$ne"/>
+    					<enumeration value="$like"/>
+    				</restriction>
+    			</simpleType>
+    		</element>
+    		<element maxOccurs="1" minOccurs="1" name="value" type="string"/>
+    	</all>
+    </complexType>
+
+    <complexType name="And">
+    	<choice>
+    	   <sequence>
+    	       <element maxOccurs="unbounded" minOccurs="1" name="Field" type="tns:QueryField"/>
+    		   <element maxOccurs="1" minOccurs="0" name="Or" type="tns:OrInAnd"/>
+    	   </sequence>
+     	   <sequence>
+    		   <element maxOccurs="1" minOccurs="1" name="Or" type="tns:OrInAnd"/>
+    	   </sequence>
+    	</choice>
+    </complexType>
+    
+    <complexType name="Or">
+       <choice>
+    	   <sequence>
+    	       <element maxOccurs="unbounded" minOccurs="1" name="Field" type="tns:QueryField"/>
+    		   <element maxOccurs="1" minOccurs="0" name="Or" type="tns:AndInOr"/>
+    	   </sequence>
+     	   <sequence>
+    		   <element maxOccurs="1" minOccurs="1" name="Or" type="tns:AndInOr"/>
+    	   </sequence>
+    	</choice>
+    </complexType>
+
+    <complexType name="AndInOr">
+    	<sequence>
+    		<element maxOccurs="unbounded" minOccurs="1" name="Field" type="tns:QueryField"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="OrInAnd">
+    	<sequence>
+    		<element maxOccurs="unbounded" minOccurs="1" name="Field" type="tns:QueryField"/>
+    	</sequence>
+    </complexType>
+</schema>

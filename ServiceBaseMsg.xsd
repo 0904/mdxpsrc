@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://www.qdairport.com/imp/servicebasemsg" xmlns:tns="http://www.qdairport.com/imp/servicebasemsg">
+
+
+    <complexType name="MSG">
+    	<sequence>
+    		<element name="HEAD" type="tns:HEAD"/>
+    		<element name="BODY" type="tns:BODY"/>
+    	</sequence>
+    </complexType>
+    
+    <element name="MSG" type="tns:MSG"/>
+
+    <complexType name="HEAD">
+    	<all>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_ServiceCode" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Version" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Sender_Org" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Sender" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Receiver_Org" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_Receiver" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_SessionId" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_SerialNumber" type="string"/>
+    		<element maxOccurs="1" minOccurs="1" name="Svc_SendTimeStamp" type="dateTime"/>
+    	</all>
+    </complexType>
+    
+    <complexType name="BODY">
+        <sequence>
+            <any minOccurs="1" maxOccurs="unbounded"/>
+        </sequence>	
+    </complexType>
+    
+    
+    
+    
+
+
+
+    
+
+    
+</schema>
