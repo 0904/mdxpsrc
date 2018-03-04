@@ -1,0 +1,12 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE mdxppublishservice_pre_log_msg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		-- log message type
+		SET OutputLocalEnvironment.msgType = 'request';
+		RETURN TRUE;
+	END;
+END MODULE;

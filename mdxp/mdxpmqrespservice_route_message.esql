@@ -1,0 +1,29 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE mdxpmqrespservice_route_message
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- copy message
+		SET OutputRoot = InputRoot;
+		
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE SenderOrg       CHARACTER;
+		DECLARE Sender          CHARACTER;
+		DECLARE ReceiverOrg     CHARACTER;
+		DECLARE Receiver        CHARACTER;
+		DECLARE ResponseCode    INTEGER 0;
+		DECLARE ResponseMsg     CHARACTER;
+		
+		SET ReceiverOrg = InputRoot.XMLNSC.MSG.HEAD.Svc_Receiver_Org;
+		IF ReceiverOrg <> 'MDXP' THEN
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.OUTTER.RESPONSE.REMOTE.QUEUE';
+		ELSE
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.INNER.RESPONSE.QUEUE';
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

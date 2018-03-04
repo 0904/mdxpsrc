@@ -1,0 +1,136 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- copy message
+		SET OutputRoot = InputRoot;
+		DECLARE Result BOOLEAN;
+		SET Result = PreCheckMessage();
+		IF Result THEN
+			-- uuid validation
+			DECLARE Uuid CHARACTER;
+			SET Uuid = OutputRoot.XMLNSC.MSG.HEAD.Svc_SerialNumber;
+			IF Uuid IS NULL OR TRIM(Uuid) = '' THEN
+				SET OutputRoot.XMLNSC.MSG.HEAD.Svc_SerialNumber = UUIDASCHAR;
+			END IF;
+			RETURN TRUE;
+		ELSE 
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
+		END IF;
+	END;
+
+	CREATE FUNCTION PreCheckMessage() RETURNS BOOLEAN 
+	BEGIN
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE SenderOrg       CHARACTER;
+		DECLARE Sender          CHARACTER;
+		DECLARE ReceiverOrg     CHARACTER;
+		DECLARE Receiver        CHARACTER;
+		DECLARE ResponseCode    INTEGER 0;
+		DECLARE ResponseMsg     CHARACTER;
+		DECLARE ServiceSql      CHARACTER;
+		DECLARE ServiceInfo     ROW;
+		DECLARE SQLState1       CHARACTER;   
+        DECLARE SQLErrorText1   CHARACTER;   
+        DECLARE SQLCode1        INTEGER;   
+        DECLARE SQLNativeError1 INTEGER;
+		
+		-- validate service code
+		SET ServiceCode = InputRoot.XMLNSC.MSG.HEAD.Svc_ServiceCode;
+		IF ServiceCode IS NULL OR TRIM(ServiceCode) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The ServiceCode (' || ServiceCode || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate service version
+		SET ServiceVersion = InputRoot.XMLNSC.MSG.HEAD.Svc_Version;
+		IF ServiceVersion IS NULL OR TRIM(ServiceVersion) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The ServiceVersion (' || ServiceVersion || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate sender org
+		SET SenderOrg = InputRoot.XMLNSC.MSG.HEAD.Svc_Sender_Org;
+		IF SenderOrg IS NULL OR TRIM(SenderOrg) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The sender orgranization (' || SenderOrg || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate sender
+		SET Sender = InputRoot.XMLNSC.MSG.HEAD.Svc_Sender;
+		IF Sender IS NULL OR TRIM(SenderOrg) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The sender (' || Sender || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate receiver org and receiver
+		SET ReceiverOrg = InputRoot.XMLNSC.MSG.HEAD.Svc_Receiver_Org;
+		SET Receiver = InputRoot.XMLNSC.MSG.HEAD.Svc_Receiver;
+		
+		IF ReceiverOrg IS NULL OR Receiver IS NULL OR TRIM(ReceiverOrg) = '' OR TRIM(Receiver) = '' THEN
+			-- look up routing table to get receiver
+			SET ServiceSql = 'SELECT * FROM ESB.ROUTE_CONFIG WHERE SERVICE_CODE = ? AND SERVICE_VERSION = ? AND SENDER_ORG = ? AND SENDER = ? FETCH FIRST 1 ROW ONLY';
+			SET ServiceInfo.Service[] = PASSTHRU(ServiceSql VALUES(ServiceCode,ServiceVersion,SenderOrg,Sender));
+			
+			--Retrieve the database return codes --
+	        SET SQLState1 = SQLSTATE;
+	        SET SQLCode1 = SQLCODE;
+	        SET SQLErrorText1 = SQLERRORTEXT;
+	        SET SQLNativeError1 = SQLNATIVEERROR;
+			
+			IF SQLCode1 <> 0 THEN
+				DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+				SET ResponseCode = 500;
+				SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
+				SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+				SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+				RETURN FALSE;
+			ELSE
+			    SET ResponseCode = 200;
+				SET ResponseMsg = 'Operation Successfully.';
+				SET OutputRoot.XMLNSC.MSG.BODY.Svc_StateCode = ResponseCode;
+				SET OutputRoot.XMLNSC.MSG.BODY.Svc_StateDesc = ResponseMsg;
+			END IF;
+		
+			SET ReceiverOrg = ServiceInfo.Service.RECEIVER_ORG;
+			SET Receiver = ServiceInfo.Service.RECEIVER;		
+			IF ReceiverOrg IS NULL OR Receiver IS NULL OR TRIM(ReceiverOrg) = '' OR TRIM(Receiver) = '' THEN
+				-- response code 204 if no receiver 
+			    SET ResponseCode = 204;
+				SET ResponseMsg = 'The service (' || ServiceCode || ') is not present in routing table with senderorg (' || SenderOrg || ') and sender (' || Sender || ')  in mdxp.';
+				SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+				SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+				SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+				RETURN FALSE;
+			END IF;
+			-- set ReceiverOrg and Receiver when record found
+			SET OutputRoot.XMLNSC.MSG.HEAD.Svc_Receiver_Org = ReceiverOrg;
+			SET OutputRoot.XMLNSC.MSG.HEAD.Svc_Receiver = Receiver;
+		END IF;
+		RETURN TRUE;
+	END;
+END MODULE;

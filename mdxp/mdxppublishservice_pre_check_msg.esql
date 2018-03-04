@@ -1,0 +1,92 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- copy message
+		SET OutputRoot = InputRoot;
+		DECLARE Result BOOLEAN;
+		SET Result = PreCheckMessage();
+		IF Result THEN
+			-- uuid validation
+			DECLARE Uuid CHARACTER;
+			SET Uuid = OutputRoot.XMLNSC.MSG.HEAD.Svc_SerialNumber;
+			IF Uuid IS NULL OR TRIM(Uuid) = '' THEN
+				SET OutputRoot.XMLNSC.MSG.HEAD.Svc_SerialNumber = UUIDASCHAR;
+			END IF;
+			RETURN TRUE;
+		ELSE 
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
+		END IF;
+	END;
+
+	CREATE FUNCTION PreCheckMessage() RETURNS BOOLEAN 
+	BEGIN
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE SenderOrg       CHARACTER;
+		DECLARE Sender          CHARACTER;
+		DECLARE ReceiverOrg     CHARACTER;
+		DECLARE Receiver        CHARACTER;
+		DECLARE ResponseCode    INTEGER 0;
+		DECLARE ResponseMsg     CHARACTER;
+		DECLARE ServiceSql      CHARACTER;
+		DECLARE ServiceInfo     ROW;
+		DECLARE SQLState1       CHARACTER;   
+        DECLARE SQLErrorText1   CHARACTER;   
+        DECLARE SQLCode1        INTEGER;   
+        DECLARE SQLNativeError1 INTEGER;
+		
+		-- validate service code
+		SET ServiceCode = InputRoot.XMLNSC.MSG.HEAD.Svc_ServiceCode;
+		IF ServiceCode IS NULL OR TRIM(ServiceCode) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The ServiceCode (' || ServiceCode || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate service version
+		SET ServiceVersion = InputRoot.XMLNSC.MSG.HEAD.Svc_Version;
+		IF ServiceVersion IS NULL OR TRIM(ServiceVersion) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The ServiceVersion (' || ServiceVersion || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate sender org
+		SET SenderOrg = InputRoot.XMLNSC.MSG.HEAD.Svc_Sender_Org;
+		IF SenderOrg IS NULL OR TRIM(SenderOrg) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The sender orgranization (' || SenderOrg || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+		
+		-- validate sender
+		SET Sender = InputRoot.XMLNSC.MSG.HEAD.Svc_Sender;
+		IF Sender IS NULL OR TRIM(SenderOrg) = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The sender (' || Sender || ') shoud not be null.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			RETURN FALSE;
+		END IF;
+
+		RETURN TRUE;
+	END;
+END MODULE;
