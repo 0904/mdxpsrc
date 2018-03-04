@@ -1,0 +1,71 @@
+BROKER SCHEMA common
+
+
+CREATE COMPUTE MODULE logger_error_LogErrorMsg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE SenderOrg       CHARACTER;
+		DECLARE Sender          CHARACTER;
+		DECLARE ReceiverOrg     CHARACTER;
+		DECLARE Receiver        CHARACTER;
+		DECLARE Uuid	        CHARACTER;
+		DECLARE Msg		        CHARACTER;
+		DECLARE ErrorCode       CHARACTER;
+		DECLARE ErrorMsg	    CHARACTER;
+		DECLARE LogTimestamp	CHARACTER;
+		DECLARE Creator	        CHARACTER;
+		
+		DECLARE ResponseCode    INTEGER 0;
+		DECLARE ResponseMsg     CHARACTER;
+		DECLARE SQLState1 CHARACTER;   
+		DECLARE SQLErrorText1 CHARACTER;   
+		DECLARE SQLCode1 INTEGER;   
+		DECLARE SQLNativeError1 INTEGER; 
+		
+		SET ServiceCode = OutputRoot.XMLNSC.MSG.HEAD.Svc_ServiceCode;
+		SET ServiceVersion = OutputRoot.XMLNSC.MSG.HEAD.Svc_Version;
+		SET SenderOrg = OutputRoot.XMLNSC.MSG.HEAD.Svc_Sender_Org;
+		SET Sender = OutputRoot.XMLNSC.MSG.HEAD.Svc_Sender;
+		SET ReceiverOrg = OutputRoot.XMLNSC.MSG.HEAD.Svc_Receiver_Org;
+		SET Receiver = OutputRoot.XMLNSC.MSG.HEAD.Svc_Receive;
+		SET Uuid = OutputRoot.XMLNSC.MSG.HEAD.Svc_SerialNumber;
+		SET Msg = CAST(ASBITSTREAM(OutputRoot.XMLNSC) AS CHARACTER CCSID OutputRoot.MQMD.CodedCharSetId);
+		SET ErrorCode = OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode;
+		SET ErrorMsg = OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc;
+		SET LogTimestamp = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+		SET Creator = OutputRoot.MQMD.UserIdentifier;
+		
+		INSERT INTO Database.ESB.ERROR_LOG(SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,SERIAL_NUMBER,MSG,ERROR_TYPE,ERROR_MSG,LOG_TIMESTAMP,CREATOR) VALUES (ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Uuid,Msg,ErrorCode,ErrorMsg,LogTimestamp,Creator);
+			
+		--Retrieve the database return codes --
+		SET SQLState1 = SQLSTATE;
+		SET SQLCode1 = SQLCODE;
+		SET SQLErrorText1 = SQLERRORTEXT;
+		SET SQLNativeError1 = SQLNATIVEERROR;
+		
+		--Retrieve the database return codes --
+		SET SQLState1 = SQLSTATE;
+		SET SQLCode1 = SQLCODE;
+		SET SQLErrorText1 = SQLERRORTEXT;
+		SET SQLNativeError1 = SQLNATIVEERROR;
+		
+		IF (SQLCode1 <> 0) THEN
+			SET ResponseCode = 500;
+			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			RETURN FALSE;
+		ELSE
+			SET ResponseCode = 200;
+			SET ResponseMsg = 'Operation Successfully.';
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
+			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			RETURN TRUE;
+		END IF;
+				
+	END;
+
+END MODULE;
