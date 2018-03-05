@@ -3,7 +3,6 @@
 	<name>mdxp</name>
 	<comment></comment>
 	<projects>
-		<project>mdxplib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
