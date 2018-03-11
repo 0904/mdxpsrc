@@ -32,7 +32,7 @@ CREATE COMPUTE MODULE logger_error_LogErrorMsg
 		SET ReceiverOrg = OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
 		SET Receiver = OutputRoot.XMLNSC.Msg.Head.Svc_Receiver;
 		SET Uuid = OutputRoot.XMLNSC.Msg.Head.Svc_SerialNumber;
-		SET Msg = CAST(ASBITSTREAM(OutputRoot.XMLNSC) AS CHARACTER CCSID OutputRoot.Properties.CodedCharSetId);
+		SET Msg = CAST(ASBITSTREAM(OutputRoot.XMLNSC) AS CHARACTER CCSID 1381);
 		SET MsgType = 3;
 		SET ErrorCode = OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode;
 		SET ErrorMsg = OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc;

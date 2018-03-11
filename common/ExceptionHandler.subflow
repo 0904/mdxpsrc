@@ -9,22 +9,18 @@
       <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="94,59">
         <translation xmi:type="utility:TranslatableString" key="InTerminal.ExceptionInput" bundleName="common/ExceptionHandler" pluginId="mdxp"/>
       </nodes>
-      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output" location="356,21">
-        <translation xmi:type="utility:TranslatableString" key="OutTerminal.ExceptionOutput" bundleName="common/ExceptionHandler" pluginId="mdxp"/>
-      </nodes>
-      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="354,128">
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output1" location="338,33">
         <translation xmi:type="utility:TranslatableString" key="OutTerminal.ExceptionErrorOutput" bundleName="common/ExceptionHandler" pluginId="mdxp"/>
       </nodes>
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="220,75" computeExpression="esql://routine/common#ExceptionHandler_ExceptionHandler.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="ExceptionHandler"/>
       </nodes>
-      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output2" location="360,206">
+      <nodes xmi:type="eflow:FCMSink" xmi:id="OutTerminal.Output2" location="351,136">
         <translation xmi:type="utility:TranslatableString" key="OutTerminal.HttpExceptionRetry" bundleName="common/ExceptionHandler" pluginId="mdxp"/>
       </nodes>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="OutTerminal.Output1" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="OutTerminal.Output2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="OutTerminal.Output2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
     </composition>
     <propertyOrganizer/>
     <stickyBoard/>

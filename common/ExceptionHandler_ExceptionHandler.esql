@@ -7,19 +7,21 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 		SET OutputRoot = InputRoot;
 		IF HttpExceptionHandler() THEN
 			IF OutputLocalEnvironment.HttpRetry = 'Y' THEN
-				PROPAGATE TO TERMINAL 'out1';
+				RETURN TRUE;
 			ELSE
 				IF OutputLocalEnvironment.HttpRetry = 'N' THEN
-					PROPAGATE TO TERMINAL 'out';
+					PROPAGATE TO TERMINAL 'failure';
+					RETURN FALSE;
 				END IF;
 			END IF;
 		ELSE
 			IF CommonExceptionHandler() THEN
-				PROPAGATE TO TERMINAL 'out';
-			ELSE
 				PROPAGATE TO TERMINAL 'failure';
+				RETURN FALSE;
 			END IF;	
 		END IF;
+		PROPAGATE TO TERMINAL 'failure';
+		RETURN FALSE;
 	END;
 	
 	CREATE PROCEDURE HttpExceptionHandler() RETURNS BOOLEAN
@@ -31,42 +33,6 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 		DECLARE errorCount 		Integer 0;
 		DECLARE connectionError	BOOLEAN;
 		
-		--SET results = CONTAINS(InputExceptionList.RecoverableException.Label, 'HTTP');
-		-- set http error 210
-		--IF results THEN
-			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
-			--SET ResponseCode = 210;
-			-- temp save InputExceptionList to OutputRoot.XML for parsering
-			--Create LASTCHILD of OutputRoot DOMAIN('XML') Name 'XML'; 
-			--SET OutputRoot.XML.ExceptionList = InputExceptionList;
-			--SET ResponseMsg = CAST(BITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER CCSID OutputRoot.Properties.CodedCharSetId);
-			--DELETE FIELD OutputRoot.XML;
-			
-			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
-			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
-			
-			-- http retry logic
-			--SET errorCount = CAST((InputLocalEnvironment.ErrorCount) AS INTEGER);
-			--IF errorCount IS NULL THEN
-				--SET OutputLocalEnvironment.ErrorCount = '1';
-				--SET errorCount = 1;
-			--ELSE 
-				--SET OutputLocalEnvironment.ErrorCount = CAST((errorCount + 1) AS CHARACTER CCSID OutputRoot.Properties.CodedCharSetId);
-			--END IF;
-			--SET connectionError = CONTAINS(ExceptionList, 'connectTimeout');
-			--IF connectionError THEN
-				--IF errorCount < 4 THEN
-					--SET OutputLocalEnvironment.HttpRetry = 'Y';
-				--ELSE
-					--SET OutputLocalEnvironment.HttpRetry = 'N';
-				--END IF;
-			--END IF;
-							
-			--RETURN TRUE;
-		--ELSE
-			--RETURN FALSE;
-		--END IF;
 		SET results = CONTAINS(CAST(OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS CHARACTER), '404');
 		IF results THEN
 			SET ResponseCode = 404;
@@ -84,10 +50,10 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 			END IF;
 
 			IF CAST(errorCount AS INTEGER) < 4 THEN
-				SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER CCSID OutputRoot.Properties.CodedCharSetId);
+				SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER CCSID 1208);
 				SET OutputLocalEnvironment.HttpRetry = 'Y';
 			ELSE
-				DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+				--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
@@ -96,7 +62,41 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 							
 			RETURN TRUE;
 		ELSE
-			RETURN FALSE;
+			SET results = CONTAINS(InputExceptionList.RecoverableException.Label, 'HTTP');
+			-- set http error 210
+			IF results THEN
+				SET ResponseCode = 210;
+				-- temp save InputExceptionList to OutputRoot.XML for parsering
+				--Create LASTCHILD of OutputRoot DOMAIN('XML') Name 'XML'; 
+				SET OutputRoot.XML.ExceptionList = InputExceptionList;
+				SET ResponseMsg = CAST(BITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER CCSID 1381);
+				
+				SET OutputRoot = InputLocalEnvironment.output;
+				SET OutputLocalEnvironment = InputLocalEnvironment;
+				
+				-- http retry logic
+				SET errorCount = CAST((InputLocalEnvironment.ErrorCount) AS INTEGER);
+				IF errorCount IS NULL THEN
+					SET errorCount = 1;
+				ELSE 
+					SET errorCount = errorCount + 1;
+				END IF;
+
+				IF CAST(errorCount AS INTEGER) < 4 THEN
+					SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER CCSID 1208);
+					SET OutputLocalEnvironment.HttpRetry = 'Y';
+				ELSE
+					--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+					SET OutputLocalEnvironment.HttpRetry = 'N';
+				END IF;
+							
+				RETURN TRUE;
+			ELSE
+				RETURN FALSE;
+			END IF;
 		END IF;
 	END;
 		
@@ -111,8 +111,7 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
-			RETURN TRUE;
 		END IF;
-		RETURN FALSE;
+		RETURN TRUE;
 	END;
 END MODULE;
