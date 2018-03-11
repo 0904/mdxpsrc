@@ -6,7 +6,13 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_log_msg
 	BEGIN
 		SET OutputRoot = InputRoot;
 		-- log message type
-		SET OutputLocalEnvironment.msgType = 'request';
+		SET OutputLocalEnvironment.msgType = '1';
+		-- uuid validation
+		DECLARE Uuid CHARACTER;
+		SET Uuid = OutputRoot.XMLNSC.Msg.Head.Svc_SerialNumber;
+		IF Uuid IS NULL OR TRIM(Uuid) = '' THEN
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_SerialNumber = UUIDASCHAR;
+		END IF;
 		RETURN TRUE;
 	END;
 END MODULE;

@@ -7,21 +7,20 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
 		SET OutputRoot = InputRoot;
 		DECLARE ServiceCode     CHARACTER;
 		DECLARE ServiceVersion  CHARACTER;
-		DECLARE ServiceSql      CHARACTER;
 		DECLARE ServiceUrl      CHARACTER;
 		DECLARE ServiceInfo     ROW;
 		DECLARE ResponseCode    INTEGER 0;
 		DECLARE ResponseMsg     CHARACTER;
-
+		DECLARE Servicesql      CHARACTER;
 		DECLARE SQLState1       CHARACTER;   
         DECLARE SQLErrorText1   CHARACTER;   
         DECLARE SQLCode1        INTEGER;   
         DECLARE SQLNativeError1 INTEGER;
 
-		SET ServiceCode = InputRoot.XMLNSC.MSG.HEAD.Svc_ServiceCode;
-		SET ServiceVersion = InputRoot.XMLNSC.MSG.HEAD.Svc_Version;
-		SET ServiceSql = 'SELECT * FROM ESB.SERVICEINFO WHERE SERVICE_CODE = ? AND SERVICE_VERSION = ? FETCH FIRST 1 ROW ONLY';
-		SET ServiceInfo.Service[] = PASSTHRU(ServiceSql VALUES(ServiceCode,ServiceVersion));
+		SET ServiceCode = InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode;
+		SET ServiceVersion = InputRoot.XMLNSC.Msg.Head.Svc_Version;
+		SET Servicesql = 'SELECT * FROM ESB.SERVICEINFO WHERE SERVICE_CODE = ''' || ServiceCode || ''' AND SERVICE_VERSION = ''' || ServiceVersion || ''' FETCH FIRST 1 ROW ONLY';
+		SET ServiceInfo.Service[] = PASSTHRU(Servicesql);
 			
 		--Retrieve the database return codes --
 	    SET SQLState1 = SQLSTATE;
@@ -30,17 +29,12 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
 	    SET SQLNativeError1 = SQLNATIVEERROR;
 		
 		IF SQLCode1 <> 0 THEN
-			DELETE FIELD OutputRoot.XMLNSC.MSG.BODY;
+			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 			SET ResponseCode = 500;
 			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			RETURN FALSE;
-		ELSE
-			SET ResponseCode = 200;
-			SET ResponseMsg = 'Operation Successfully.';
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
 		END IF;
 		
 		SET ServiceUrl = ServiceInfo.Service.URL;		
@@ -48,14 +42,16 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
 			-- response code 204 if no service 
 			SET ResponseCode = 204;
 			SET ResponseMsg = 'The URL of service (' || ServiceCode || ') is not found in service info table in mdxp.';
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateCode = ResponseCode;
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.MSG.BODY.RESPONSE.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		ELSE
 			-- set request URL
 			SET OutputLocalEnvironment.Destination.HTTP.RequestURL = ServiceUrl;
+			-- set message to localenv
+			SET OutputLocalEnvironment.output = OutputRoot;
 			RETURN TRUE;
 		END IF;
 	END;

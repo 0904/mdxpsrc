@@ -6,7 +6,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_log_msg_out
 	BEGIN
 		SET OutputRoot = InputRoot;
 		-- log message type
-		SET OutputLocalEnvironment.msgType = 'response';
+		SET OutputLocalEnvironment.msgType = '2';
 		RETURN TRUE;
 	END;
 END MODULE;

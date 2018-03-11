@@ -16,7 +16,7 @@ CREATE COMPUTE MODULE mdxpmqrespservice_route_message_error
 		DECLARE ResponseCode    INTEGER 0;
 		DECLARE ResponseMsg     CHARACTER;
 		
-		SET ReceiverOrg = InputRoot.XMLNSC.MSG.HEAD.Svc_Receiver_Org;
+		SET ReceiverOrg = InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
 		IF ReceiverOrg <> 'MDXP' THEN
 			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.OUTTER.RESPONSE.REMOTE.QUEUE';
 		ELSE
