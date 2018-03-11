@@ -9,7 +9,7 @@
     <shortDescription xmi:type="utility:ConstantString" string="Initial Web Service for MDXP"/>
     <version xmi:type="utility:ConstantString" string="1.0.0"/>
     <composition>
-      <nodes xmi:type="ComIbmWSInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_29" location="4,119" URLSpecifier="/mdxp/v1.0/test">
+      <nodes xmi:type="ComIbmWSInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_29" location="4,119" URLSpecifier="/mdxp/v1.0/test" messageDomainProperty="XMLNSC">
         <translation xmi:type="utility:ConstantString" string="mdxp_input"/>
       </nodes>
       <nodes xmi:type="ComIbmWSReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_30" location="652,107">
