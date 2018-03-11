@@ -36,7 +36,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 		-- validate service code
 		SET ServiceCode = InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode;
 		IF ServiceCode IS NULL OR TRIM(ServiceCode) = '' THEN
-			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The ServiceCode (' || ServiceCode || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
@@ -48,7 +48,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 		-- validate service version
 		SET ServiceVersion = InputRoot.XMLNSC.Msg.Head.Svc_Version;
 		IF ServiceVersion IS NULL OR TRIM(ServiceVersion) = '' THEN
-			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The ServiceVersion (' || ServiceVersion || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
@@ -60,7 +60,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 		-- validate sender org
 		SET SenderOrg = InputRoot.XMLNSC.Msg.Head.Svc_Sender_Org;
 		IF SenderOrg IS NULL OR TRIM(SenderOrg) = '' THEN
-			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The sender orgranization (' || SenderOrg || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
@@ -72,7 +72,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 		-- validate sender
 		SET Sender = InputRoot.XMLNSC.Msg.Head.Svc_Sender;
 		IF Sender IS NULL OR TRIM(SenderOrg) = '' THEN
-			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The sender (' || Sender || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
@@ -97,7 +97,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 	        SET SQLNativeError1 = SQLNATIVEERROR;
 			
 			IF SQLCode1 <> 0 THEN
-				DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+				--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 				SET ResponseCode = 500;
 				SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);

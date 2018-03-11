@@ -25,70 +25,66 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 		-- validate receiver org and receiver
 		SET ServiceCode = InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode;
 		SET ServiceVersion = InputRoot.XMLNSC.Msg.Head.Svc_Version;
-		SET SenderOrg = InputRoot.XMLNSC.Msg.Head.Svc_Sender_Org;
-		SET Sender = InputRoot.XMLNSC.Msg.Head.Svc_Sender;
-		SET ReceiverOrg = InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
-		SET Receiver = InputRoot.XMLNSC.Msg.Head.Svc_Receiver;
+			
+		SET Servicesql = 'SELECT * FROM ESB.ROUTE_CONFIG WHERE SERVICE_CODE = ''' || ServiceCode || ''' AND SERVICE_VERSION = ''' || ServiceVersion || '''';
+		SET ServiceInfo.Service[] = PASSTHRU(Servicesql);
+			
+		--Retrieve the database return codes --
+	    SET SQLState1 = SQLSTATE;
+	    SET SQLCode1 = SQLCODE;
+	    SET SQLErrorText1 = SQLERRORTEXT;
+	    SET SQLNativeError1 = SQLNATIVEERROR;
 		
-		IF ReceiverOrg IS NULL OR Receiver IS NULL OR TRIM(ReceiverOrg) = '' OR TRIM(Receiver) = '' THEN
-			-- look up routing table to get receiver
-			
-			SET Servicesql = 'SELECT * FROM ESB.ROUTE_CONFIG WHERE SERVICE_CODE = ''' || ServiceCode || ''' AND SERVICE_VERSION = ''' || ServiceVersion || ''' AND SENDER_ORG = ''' || SenderOrg || ''' AND SENDER = ''' || Sender || '';
-			SET ServiceInfo.Service[] = PASSTHRU(Servicesql);
-			
-			--Retrieve the database return codes --
-	        SET SQLState1 = SQLSTATE;
-	        SET SQLCode1 = SQLCODE;
-	        SET SQLErrorText1 = SQLERRORTEXT;
-	        SET SQLNativeError1 = SQLNATIVEERROR;
-			
-			IF SQLCode1 <> 0 THEN
-				DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
-				SET ResponseCode = 500;
-				SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-				RETURN FALSE;
-			ELSE
-			    SET ResponseCode = 200;
-				SET ResponseMsg = 'Operation Successfully.';
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			END IF;
-		
-			DECLARE I INTEGER 1;
-			DECLARE J INTEGER;
-			SET J = CARDINALITY(ServiceInfo.Service[]);
-			IF J IS NULL OR J = 0 THEN
-				SET ResponseCode = 204;
-				SET ResponseMsg = 'The service (' || ServiceCode || ') is not present in routing table with senderorg (' || SenderOrg || ') and sender (' || Sender || ')  in mdxp.';
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
-				RETURN FALSE;
-			END IF;
-			WHILE I <= J DO
-				SET ReceiverOrg = ServiceInfo.Service[I].RECEIVER_ORG;
-				SET Receiver = ServiceInfo.Service[I].RECEIVER;
-				-- set ReceiverOrg and Receiver when record found
-				SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org = ReceiverOrg;
-				SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver = Receiver;
-				IF ReceiverOrg <> 'MDXP' THEN
-					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.OUTTER.REQUEST.REMOTE.QUEUE';
-					PROPAGATE TO TERMINAL 'out';
-				ELSE
-					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.INNER.RESPONSE.QUEUE';
-					PROPAGATE TO TERMINAL 'out';
-				END IF;				
-				SET I = I + 1;
-			END WHILE;
+		IF SQLCode1 <> 0 THEN
+			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			SET ResponseCode = 500;
+			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
 		ELSE
+			SET ResponseCode = 200;
+			SET ResponseMsg = 'Operation Successfully.';
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+		END IF;
+		
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(ServiceInfo.Service[]);
+		IF J IS NULL OR J = 0 THEN
+			SET ResponseCode = 204;
+			SET ResponseMsg = 'The service (' || ServiceCode || ') is not present in routing table with ServiceVersion (' || ServiceVersion || ') in mdxp.';
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
+		END IF;
+		WHILE I <= J DO
+			SET OutputRoot = InputRoot;
+			SET ReceiverOrg = ServiceInfo.Service[I].RECEIVER_ORG;
+			SET Receiver = ServiceInfo.Service[I].RECEIVER;
+			SET SenderOrg = ServiceInfo.Service[I].SENDER_ORG;
+			SET Sender = ServiceInfo.Service[I].SENDER;
+			-- set ReceiverOrg/SenderOrg and Receiver/Sender when records found
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org = ReceiverOrg;
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver = Receiver;
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org = SenderOrg;
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = Sender;
 			IF ReceiverOrg <> 'MDXP' THEN
 				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.OUTTER.REQUEST.REMOTE.QUEUE';
+				PROPAGATE TO TERMINAL 'out';
 			ELSE
 				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.INNER.RESPONSE.QUEUE';
-			END IF;
-			RETURN TRUE;
-		END IF;
+				PROPAGATE TO TERMINAL 'out';
+			END IF;				
+			SET I = I + 1;
+		END WHILE;
+		
+		RETURN FALSE;
 	END;
 END MODULE;
