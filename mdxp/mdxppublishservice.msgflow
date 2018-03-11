@@ -19,10 +19,10 @@
       <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="155,106">
         <translation xmi:type="utility:ConstantString" string="Flow Order"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="234,27" computeExpression="esql://routine/mdxp#mdxppublishservice_pre_log_msg.Main">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="234,27" computeExpression="esql://routine/mdxp#mdxppublishservice_pre_log_msg.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="pre_log_msg"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="358,110" computeExpression="esql://routine/mdxp#mdxppublishservice_pre_check_msg.Main">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="358,110" computeExpression="esql://routine/mdxp#mdxppublishservice_pre_check_msg.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="pre_check_msg"/>
       </nodes>
       <nodes xmi:type="common_logger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="342,24">

@@ -18,7 +18,7 @@
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="382,96" computeExpression="esql://routine/mdxp#mdxpmqrespservice_route_message.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="route_message"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="205,30" computeExpression="esql://routine/mdxp#mdxpmqrespservice_pre_log_msg_out.Main">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="205,30" computeExpression="esql://routine/mdxp#mdxpmqrespservice_pre_log_msg_out.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="pre_log_msg_out"/>
       </nodes>
       <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="126,94">
@@ -36,7 +36,7 @@
       <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="443,210">
         <translation xmi:type="utility:ConstantString" string="error_floworder"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="470,144" computeExpression="esql://routine/mdxp#mdxpmqrespservice_route_message_error.Main">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="470,144" computeExpression="esql://routine/mdxp#mdxpmqrespservice_route_message_error.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="route_message_error"/>
       </nodes>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
