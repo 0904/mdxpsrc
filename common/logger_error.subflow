@@ -12,7 +12,7 @@
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="321,137" dataSource="ESBDS" computeExpression="esql://routine/common#logger_error_LogErrorMsg.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="LogErrorMsg"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="331,57" destination="file" filePath="C:\mdxp\logs\MDXP_Error.log" pattern="===========================================================================================================&#xD;&#xA;Log time : ${CURRENT_TIMESTAMP}&#xD;&#xA;Message detail: ${Root}&#xD;&#xA;Exception List: ${ExceptionList}&#xD;&#xA;==========================================================================================================="
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="331,57" destination="file" filePath="/home/mxdp/logs/MDXP_Error.log" pattern="===========================================================================================================&#xD;&#xA;Log time : ${CURRENT_TIMESTAMP}&#xD;&#xA;Message detail: ${Root}&#xD;&#xA;Exception List: ${ExceptionList}&#xD;&#xA;==========================================================================================================="
           messageCatalog="mdxpmqservice">
         <translation xmi:type="utility:ConstantString" string="LogOutput"/>
       </nodes>
