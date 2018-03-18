@@ -25,8 +25,8 @@ CREATE COMPUTE MODULE logger_error_LogErrorMsg
 		--DECLARE SQLCode1 INTEGER;   
 		--DECLARE SQLNativeError1 INTEGER; 
 		
-		SET ServiceCode = OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode;
-		SET ServiceVersion = OutputRoot.XMLNSC.Msg.Head.Svc_Version;
+		SET ServiceCode = TRIM(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
+		SET ServiceVersion = TRIM(OutputRoot.XMLNSC.Msg.Head.Svc_Version);
 		SET SenderOrg = OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org;
 		SET Sender = OutputRoot.XMLNSC.Msg.Head.Svc_Sender;
 		SET ReceiverOrg = OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
@@ -49,13 +49,13 @@ CREATE COMPUTE MODULE logger_error_LogErrorMsg
 		--IF (SQLCode1 <> 0) THEN
 			--SET ResponseCode = 500;
 			--SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
-			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			--RETURN FALSE;
 		--ELSE
 			--SET ResponseCode = 200;
 			--SET ResponseMsg = 'Operation Successfully.';
-			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			--RETURN TRUE;
 		--END IF;

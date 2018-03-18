@@ -4,7 +4,6 @@ BROKER SCHEMA common
 CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
-		SET OutputRoot = InputRoot;
 		IF HttpExceptionHandler() THEN
 			IF OutputLocalEnvironment.HttpRetry = 'Y' THEN
 				RETURN TRUE;
@@ -20,6 +19,7 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 				RETURN FALSE;
 			END IF;	
 		END IF;
+		SET OutputRoot = InputRoot;
 		PROPAGATE TO TERMINAL 'failure';
 		RETURN FALSE;
 	END;
@@ -33,14 +33,7 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 		DECLARE errorCount 		Integer 0;
 		DECLARE connectionError	BOOLEAN;
 		
-		SET results = CONTAINS(CAST(OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS CHARACTER), '404');
-		IF results THEN
-			SET ResponseCode = 404;
-			SET ResponseMsg = CAST(OutputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Line" AS CHARACTER);
-			
-			SET OutputRoot = InputLocalEnvironment.output;
-			SET OutputLocalEnvironment = InputLocalEnvironment;
-			
+		IF EXISTS(InputRoot.HTTPResponseHeader[]) THEN 
 			-- http retry logic
 			SET errorCount = CAST((InputLocalEnvironment.ErrorCount) AS INTEGER);
 			IF errorCount IS NULL THEN
@@ -49,12 +42,30 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 				SET errorCount = errorCount + 1;
 			END IF;
 
-			IF CAST(errorCount AS INTEGER) < 4 THEN
-				SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER CCSID 1208);
+			IF CAST(errorCount AS INTEGER) < 4 AND EXISTS(InputLocalEnvironment.output.MQMD[]) THEN
+				-- copy Msg in OutputRoot
+				DELETE FIELD OutputRoot.XMLNSC;
+				CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC' NAME 'XMLNSC';
+				CREATE FIRSTCHILD OF OutputRoot.XMLNSC TYPE XMLNSC.XmlDeclaration NAME 'XmlDeclaration'; 
+				SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0'; 
+				SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+				SET OutputRoot.XMLNSC.Msg = InputLocalEnvironment.output.XMLNSC.Msg;
+				SET OutputRoot.MQMD = InputLocalEnvironment.output.MQMD;
+				SET OutputRoot.Properties = InputLocalEnvironment.output.Properties;
+				SET OutputLocalEnvironment = InputLocalEnvironment;
+				SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER);
 				SET OutputLocalEnvironment.HttpRetry = 'Y';
 			ELSE
-				--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+				SET ResponseCode = CAST(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Code" AS INTEGER);
+				SET ResponseMsg = CAST(InputRoot.HTTPResponseHeader."X-Original-HTTP-Status-Line" AS CHARACTER);
+				-- copy Msg in OutputRoot
+				DELETE FIELD OutputRoot.XMLNSC;
+				CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC' NAME 'XMLNSC';
+				CREATE FIRSTCHILD OF OutputRoot.XMLNSC TYPE XMLNSC.XmlDeclaration NAME 'XmlDeclaration'; 
+				SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0'; 
+				SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+				SET OutputRoot.XMLNSC.Msg = InputLocalEnvironment.output.XMLNSC.Msg;
+				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
 				SET OutputLocalEnvironment.HttpRetry = 'N';
@@ -64,16 +75,7 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 		ELSE
 			SET results = CONTAINS(InputExceptionList.RecoverableException.Label, 'HTTP');
 			-- set http error 210
-			IF results THEN
-				SET ResponseCode = 210;
-				-- temp save InputExceptionList to OutputRoot.XML for parsering
-				--Create LASTCHILD of OutputRoot DOMAIN('XML') Name 'XML'; 
-				SET OutputRoot.XML.ExceptionList = InputExceptionList;
-				SET ResponseMsg = CAST(BITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER CCSID 1381);
-				
-				SET OutputRoot = InputLocalEnvironment.output;
-				SET OutputLocalEnvironment = InputLocalEnvironment;
-				
+			IF results THEN		
 				-- http retry logic
 				SET errorCount = CAST((InputLocalEnvironment.ErrorCount) AS INTEGER);
 				IF errorCount IS NULL THEN
@@ -82,17 +84,38 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 					SET errorCount = errorCount + 1;
 				END IF;
 
-				IF CAST(errorCount AS INTEGER) < 4 THEN
-					SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER CCSID 1208);
+				IF CAST(errorCount AS INTEGER) < 4 AND EXISTS(InputLocalEnvironment.output.MQMD[]) THEN
+					-- copy Msg in OutputRoot
+					DELETE FIELD OutputRoot.XMLNSC;
+					CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC' NAME 'XMLNSC';
+					CREATE FIRSTCHILD OF OutputRoot.XMLNSC TYPE XMLNSC.XmlDeclaration NAME 'XmlDeclaration'; 
+					SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0'; 
+					SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+					SET OutputRoot.XMLNSC.Msg = InputLocalEnvironment.output.XMLNSC.Msg;
+					SET OutputRoot.MQMD = InputLocalEnvironment.output.MQMD;
+					SET OutputRoot.Properties = InputLocalEnvironment.output.Properties;
+					SET OutputLocalEnvironment = InputLocalEnvironment;
+					SET OutputLocalEnvironment.ErrorCount = CAST(errorCount AS CHARACTER);
 					SET OutputLocalEnvironment.HttpRetry = 'Y';
 				ELSE
-					--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
-					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+					SET ResponseCode = 210;
+					-- temp save InputExceptionList to OutputRoot.XML for parsering
+					Create LASTCHILD of OutputRoot DOMAIN('XML') Name 'XML'; 
+					SET OutputRoot.XML.ExceptionList = InputExceptionList;
+					SET ResponseMsg = CAST(ASBITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER);
+					DELETE FIELD OutputRoot.XML;
+					-- copy Msg in OutputRoot
+					DELETE FIELD OutputRoot.XMLNSC;
+					CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC' NAME 'XMLNSC';
+					CREATE FIRSTCHILD OF OutputRoot.XMLNSC TYPE XMLNSC.XmlDeclaration NAME 'XmlDeclaration'; 
+					SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Version = '1.0'; 
+					SET OutputRoot.XMLNSC.(XMLNSC.XmlDeclaration)*.(XMLNSC.Attribute)Encoding = 'UTF-8';
+					SET OutputRoot.XMLNSC.Msg = InputLocalEnvironment.output.XMLNSC.Msg;
+					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
 					SET OutputLocalEnvironment.HttpRetry = 'N';
-				END IF;
-							
+				END IF;	
 				RETURN TRUE;
 			ELSE
 				RETURN FALSE;
@@ -102,13 +125,14 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 		
 	CREATE PROCEDURE CommonExceptionHandler() RETURNS BOOLEAN
 	BEGIN
+		SET OutputRoot = InputRoot;
 		DECLARE results			BOOLEAN;
 		DECLARE ResponseCode    INTEGER 0;
 		DECLARE ResponseMsg     CHARACTER;
 		IF OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode IS NULL OR TRIM(OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode) = '' THEN
 			SET ResponseCode = 501;
 			SET ResponseMsg = 'Failed with UNKNOWN errors';
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
 		END IF;
