@@ -9,7 +9,7 @@
     <shortDescription xmi:type="utility:ConstantString" string="Initial MQ Service for MDXP"/>
     <version xmi:type="utility:ConstantString" string="1.0.0"/>
     <composition>
-      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_27" location="16,81" queueName="MDXP.OUTTER.REQUEST.INPUT.QUEUE" destinationQueueManagerName="MDXPQMGR" messageDomainProperty="XMLNSC">
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_27" location="16,81" queueName="MDXP.OUTTER.REQUEST.INPUT.QUEUE" destinationQueueManagerName="MDXPQMGR" messageDomainProperty="XMLNSC" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="mdxp_input"/>
       </nodes>
       <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_31" location="714,88" queueName="MDXP.OUTTER.RESPONSE.REMOTE.QUEUE" destinationQueueManagerName="MDXPQMGR">
@@ -29,7 +29,7 @@
       <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="90,74">
         <translation xmi:type="utility:ConstantString" string="input_floworder"/>
       </nodes>
-      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="330,78" URLSpecifier="http://localhost:7800/" httpVersion="1.1" protocol="TLS" messageDomainProperty="XMLNSC">
+      <nodes xmi:type="ComIbmWSRequest.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="330,78" URLSpecifier="http://localhost:7800/" httpVersion="1.1" protocol="TLS" messageDomainProperty="XMLNSC" validateTiming="complete">
         <translation xmi:type="utility:ConstantString" string="HTTP Request"/>
       </nodes>
       <nodes xmi:type="common_ExceptionHandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="502,154">
@@ -79,6 +79,11 @@
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.first" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
     </composition>
     <propertyOrganizer/>
     <stickyBoard/>

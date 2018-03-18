@@ -34,12 +34,11 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
         DECLARE SQLNativeError1 INTEGER;
 		
 		-- validate service code
-		SET ServiceCode = InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode;
+		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
 		IF ServiceCode IS NULL OR TRIM(ServiceCode) = '' THEN
-			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The ServiceCode (' || ServiceCode || ') shoud not be null.';
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
 			PROPAGATE TO TERMINAL 'failure';
@@ -47,12 +46,11 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
 		END IF;
 		
 		-- validate service version
-		SET ServiceVersion = InputRoot.XMLNSC.Msg.Head.Svc_Version;
-		IF ServiceVersion IS NULL OR TRIM(ServiceVersion) = '' THEN
-			--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+		SET ServiceVersion = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Version);
+		IF ServiceVersion IS NULL OR TRIM(ServiceVersion) = '' THEN			
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The ServiceVersion (' || ServiceVersion || ') shoud not be null.';
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
 			PROPAGATE TO TERMINAL 'failure';
