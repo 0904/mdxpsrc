@@ -4,10 +4,19 @@ CREATE COMPUTE MODULE mdxpmqservice_FullRequestFilter
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 		SET OutputRoot = InputRoot;
+		-- dest conversion
+		SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org = InputRoot.XMLNSC.Msg.Head.Svc_Sender_Org;
+		SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver = InputRoot.XMLNSC.Msg.Head.Svc_Sender;
+		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org = InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
+		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = InputRoot.XMLNSC.Msg.Head.Svc_Receiver;
+		SET OutputLocalEnvironment.msgType = '2';
 		PROPAGATE TO TERMINAL 'out';
-		IF OutputRoot.XMLNSC.Msg.Body.Full = 'Y' AND OutputRoot.XMLNSC.Msg.Body.IsFinish = 'false' THEN
+		IF InputRoot.XMLNSC.Msg.Body.Full = 'Y' AND LOWER(InputRoot.XMLNSC.Msg.Body.IsFinish) = 'false' THEN
 			DECLARE Sequence CHARACTER;
-			SET Sequence = OutputRoot.XMLNSC.Msg.Body.Sequence;
+			SET Sequence = InputRoot.XMLNSC.Msg.Body.Sequence;
+			SET OutputRoot.Properties = InputRoot.Properties;
+			SET OutputRoot.HTTPRequestHeader.Authorization = InputRoot.HTTPRequestHeader.Authorization;
+			SET OutputRoot.XMLNSC.Msg.Head = InputRoot.XMLNSC.Msg.Head;
 			IF Sequence IS NULL OR TRIM(Sequence) = '' THEN
 				DECLARE ResponseCode INTEGER;
 				DECLARE ResponseMsg CHARACTER;
@@ -18,12 +27,14 @@ CREATE COMPUTE MODULE mdxpmqservice_FullRequestFilter
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 				PROPAGATE TO TERMINAL 'failure';
 			ELSE
-				DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+				--DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
 				SET OutputRoot.XMLNSC.Msg.Body.Full = 'Y';				
 				SET OutputRoot.XMLNSC.Msg.Body.Sequence = CAST((CAST(Sequence AS INTEGER) + 1) AS CHARACTER);
+				-- set request URL
+				SET OutputLocalEnvironment.Destination.HTTP.RequestURL = InputLocalEnvironment.Destination.HTTP.RequestURL;
 				-- set token
-				CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
-				SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
+				--CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
+				--SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
 				PROPAGATE TO TERMINAL 'out1';
 			END IF;
 		END IF;

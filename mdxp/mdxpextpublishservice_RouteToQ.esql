@@ -6,7 +6,7 @@ CREATE COMPUTE MODULE mdxpextpublishservice_RouteToQ
 	BEGIN
 		-- copy message
 		SET OutputRoot = InputRoot;
-		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'Q.L.SEND.MDXP.TO.SUBSYS';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_S';
 		RETURN TRUE;
 	END;
 

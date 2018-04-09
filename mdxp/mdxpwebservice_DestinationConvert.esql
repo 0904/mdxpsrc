@@ -5,10 +5,13 @@ CREATE COMPUTE MODULE mdxpwebservice_DestinationConvert
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 		SET OutputRoot = InputRoot;
+		-- dest conversion
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org = InputRoot.XMLNSC.Msg.Head.Svc_Sender_Org;
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver = InputRoot.XMLNSC.Msg.Head.Svc_Sender;
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org = InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = InputRoot.XMLNSC.Msg.Head.Svc_Receiver;
+		SET OutputLocalEnvironment.msgType = '2';
 		RETURN TRUE;
 	END;
+
 END MODULE;

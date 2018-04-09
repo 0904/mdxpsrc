@@ -23,7 +23,7 @@ CREATE COMPUTE MODULE mdxpmqrespservice_route_message
 			--SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.INNER.RESPONSE.QUEUE';
 		--END IF;
 		
-		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'Q.L.RESPONSE.MDXP.TO.SUBSYS';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_R';
 		RETURN TRUE;
 	END;
 
