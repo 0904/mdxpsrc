@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmLabel.msgnode="ComIbmLabel.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmRouteToLabel.msgnode="ComIbmRouteToLabel.msgnode" xmlns:common_ExceptionHandler.subflow="common/ExceptionHandler.subflow" xmlns:common_logger_error.subflow="common/logger_error.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
+    xmlns:mdxp_mdxpmqrespservice.subflow="mdxp/mdxpmqrespservice.subflow" xmlns:mdxp_mdxpmqservice.subflow="mdxp/mdxpmqservice.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="mdxp/mdxpmqdispatchservice.msgflow" nsPrefix="mdxp_mdxpmqdispatchservice.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="mdxpmqdispatchservice" bundleName="mdxp/mdxpmqdispatchservice" pluginId="mdxp"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/mdxp/icons/full/obj16/mdxpmqdispatchservice.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/mdxp/icons/full/obj30/mdxpmqdispatchservice.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="message flow to handle request and response msg from DDXP"/>
+    <longDescription xmi:type="utility:ConstantString" string="despatch message to mqservice if request from DDXP&#xD;&#xA;despatch message to mqrespservice if response from DDXP"/>
+    <version xmi:type="utility:ConstantString" string="1.0.0"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="71,81" queueName="Q.L.REQUEST.DDXP.TO.MDXP" destinationQueueManagerName="MDXPQMGR" messageDomainProperty="XMLNSC" validateTiming="complete" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="mdxp_input"/>
+      </nodes>
+      <nodes xmi:type="common_ExceptionHandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="229,179">
+        <translation xmi:type="utility:ConstantString" string="ExceptionHandler"/>
+      </nodes>
+      <nodes xmi:type="common_logger_error.subflow:FCMComposite_1" xmi:id="FCMComposite_1_4" location="431,175">
+        <translation xmi:type="utility:ConstantString" string="logger_error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="199,80" computeExpression="esql://routine/mdxp#mdxpmqdispatchservice_dispatch_message.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="dispatch_message"/>
+      </nodes>
+      <nodes xmi:type="ComIbmRouteToLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="324,81">
+        <translation xmi:type="utility:ConstantString" string="Route To Label"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="432,24" labelName="mqservice">
+        <translation xmi:type="utility:ConstantString" string="mqservice"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="426,96" labelName="mqrespservice">
+        <translation xmi:type="utility:ConstantString" string="mqrespservice"/>
+      </nodes>
+      <nodes xmi:type="mdxp_mdxpmqservice.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="519,24">
+        <translation xmi:type="utility:ConstantString" string="mdxpmqservice"/>
+      </nodes>
+      <nodes xmi:type="mdxp_mdxpmqrespservice.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="508,95">
+        <translation xmi:type="utility:ConstantString" string="mdxpmqrespservice"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

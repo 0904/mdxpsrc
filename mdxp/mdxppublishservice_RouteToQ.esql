@@ -37,10 +37,10 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 		
 		IF SQLCode1 <> 0 THEN			
 			SET ResponseCode = 500;
-			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
+			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		ELSE
@@ -48,11 +48,12 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 			SET ResponseMsg = 'Operation Successfully.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 		END IF;
 		
 		DECLARE I INTEGER 1;
 		DECLARE J INTEGER;
+		DECLARE ExtPublish BOOLEAN FALSE;
 		SET J = CARDINALITY(ServiceInfo.Service[]);
 		IF J IS NULL OR J = 0 THEN
 			SET ResponseCode = 204;
@@ -75,10 +76,13 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org = SenderOrg;
 			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = Sender;
 			IF ReceiverOrg <> 'MDXP' THEN
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.OUTTER.REQUEST.REMOTE.QUEUE';
-				PROPAGATE TO TERMINAL 'out';
+				IF ExtPublish IS FALSE THEN
+					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'Q.R.SEND.MDXP.TO.DDXP';
+					PROPAGATE TO TERMINAL 'out';
+					SET ExtPublish = TRUE;
+				END IF;
 			ELSE
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'MDXP.INNER.RESPONSE.QUEUE';
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'Q.L.SEND.MDXP.TO.SUBSYS';
 				PROPAGATE TO TERMINAL 'out';
 			END IF;				
 			SET I = I + 1;

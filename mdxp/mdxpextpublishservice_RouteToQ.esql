@@ -1,0 +1,13 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE mdxpextpublishservice_RouteToQ
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- copy message
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'Q.L.SEND.MDXP.TO.SUBSYS';
+		RETURN TRUE;
+	END;
+
+END MODULE;

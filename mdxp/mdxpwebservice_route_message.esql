@@ -30,7 +30,7 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
 		
 		IF SQLCode1 <> 0 THEN			
 			SET ResponseCode = 500;
-			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
+			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			RETURN FALSE;
@@ -51,6 +51,9 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
 			SET OutputLocalEnvironment.Destination.HTTP.RequestURL = ServiceUrl;
 			-- set message to localenv
 			SET OutputLocalEnvironment.output = OutputRoot;
+			-- set token
+			CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
+			SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
 			RETURN TRUE;
 		END IF;
 	END;

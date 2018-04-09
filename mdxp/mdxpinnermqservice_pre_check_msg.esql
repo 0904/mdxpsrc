@@ -1,7 +1,7 @@
 BROKER SCHEMA mdxp
 
 
-CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
+CREATE COMPUTE MODULE mdxpinnermqservice_pre_check_msg
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 		-- copy message
@@ -9,7 +9,13 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 		DECLARE Result BOOLEAN;
 		SET Result = PreCheckMessage();
 		IF Result THEN
-			RETURN TRUE;
+			IF TRIM(OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org) = 'MDXP' THEN
+				PROPAGATE TO TERMINAL 'out';
+				RETURN FALSE;
+			ELSE
+				PROPAGATE TO TERMINAL 'out1';
+				RETURN FALSE;
+			END IF;
 		ELSE 
 			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;

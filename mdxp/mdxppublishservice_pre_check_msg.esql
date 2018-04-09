@@ -40,7 +40,7 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
 			SET ResponseMsg = 'The ServiceCode (' || ServiceCode || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		END IF;
@@ -52,7 +52,7 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
 			SET ResponseMsg = 'The ServiceVersion (' || ServiceVersion || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		END IF;

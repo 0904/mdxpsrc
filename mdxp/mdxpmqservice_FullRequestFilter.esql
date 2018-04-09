@@ -1,0 +1,32 @@
+BROKER SCHEMA mdxp
+
+CREATE COMPUTE MODULE mdxpmqservice_FullRequestFilter
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		PROPAGATE TO TERMINAL 'out';
+		IF OutputRoot.XMLNSC.Msg.Body.Full = 'Y' AND OutputRoot.XMLNSC.Msg.Body.IsFinish = 'false' THEN
+			DECLARE Sequence CHARACTER;
+			SET Sequence = OutputRoot.XMLNSC.Msg.Body.Sequence;
+			IF Sequence IS NULL OR TRIM(Sequence) = '' THEN
+				DECLARE ResponseCode INTEGER;
+				DECLARE ResponseMsg CHARACTER;
+				SET ResponseCode = 209;
+				SET ResponseMsg = 'Sequence is required when IsFinish is false';
+				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+				PROPAGATE TO TERMINAL 'failure';
+			ELSE
+				DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+				SET OutputRoot.XMLNSC.Msg.Body.Full = 'Y';				
+				SET OutputRoot.XMLNSC.Msg.Body.Sequence = CAST((CAST(Sequence AS INTEGER) + 1) AS CHARACTER);
+				-- set token
+				CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
+				SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
+				PROPAGATE TO TERMINAL 'out1';
+			END IF;
+		END IF;
+		RETURN FALSE;
+	END;
+END MODULE;
