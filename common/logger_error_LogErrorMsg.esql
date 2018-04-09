@@ -48,7 +48,7 @@ CREATE COMPUTE MODULE logger_error_LogErrorMsg
 		
 		--IF (SQLCode1 <> 0) THEN
 			--SET ResponseCode = 500;
-			--SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1 ;
+			--SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1;
 			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			--SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			--RETURN FALSE;

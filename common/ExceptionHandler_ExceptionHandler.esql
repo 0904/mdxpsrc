@@ -6,6 +6,9 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 	BEGIN
 		IF HttpExceptionHandler() THEN
 			IF OutputLocalEnvironment.HttpRetry = 'Y' THEN
+				-- set token
+				CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
+				SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
 				RETURN TRUE;
 			ELSE
 				IF OutputLocalEnvironment.HttpRetry = 'N' THEN
@@ -67,7 +70,7 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 				SET OutputRoot.XMLNSC.Msg = InputLocalEnvironment.output.XMLNSC.Msg;
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 				SET OutputLocalEnvironment.HttpRetry = 'N';
 			END IF;
 							
@@ -102,8 +105,22 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 					-- temp save InputExceptionList to OutputRoot.XML for parsering
 					Create LASTCHILD of OutputRoot DOMAIN('XML') Name 'XML'; 
 					SET OutputRoot.XML.ExceptionList = InputExceptionList;
-					SET ResponseMsg = CAST(ASBITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER);
+					SET ResponseMsg = CAST(ASBITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER CCSID 1381);
 					DELETE FIELD OutputRoot.XML;
+					
+					-- Create a reference to the first child of the exception list
+			   	    --declare ptrException reference to InputExceptionList.*[1];
+			   	    -- keep looping while the moves to the child of exception list work 
+					--WHILE lastmove(ptrException) DO
+						-- store the current values for the error number and text
+						--IF ptrException.Number is not null THEN
+			        		--SET ResponseCode = ptrException.Number;
+			        		--SET ResponseMsg = ptrException.Text;
+			  			--END IF;
+			  			-- now move to the last child which should be the next exceptionlist
+						--move ptrException lastchild;
+					--END WHILE; 
+					
 					-- copy Msg in OutputRoot
 					DELETE FIELD OutputRoot.XMLNSC;
 					CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC' NAME 'XMLNSC';
@@ -113,7 +130,7 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 					SET OutputRoot.XMLNSC.Msg = InputLocalEnvironment.output.XMLNSC.Msg;
 					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+					SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 					SET OutputLocalEnvironment.HttpRetry = 'N';
 				END IF;	
 				RETURN TRUE;
@@ -129,12 +146,25 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 		DECLARE results			BOOLEAN;
 		DECLARE ResponseCode    INTEGER 0;
 		DECLARE ResponseMsg     CHARACTER;
+		
+		-- temp save InputExceptionList to OutputRoot.XML for parsering
+		Create LASTCHILD of OutputRoot DOMAIN('XML') Name 'XML'; 
+		SET OutputRoot.XML.ExceptionList = InputExceptionList;
+		SET ResponseMsg = CAST(ASBITSTREAM(OutputRoot.XML.ExceptionList) AS CHARACTER CCSID 1381);
+		DELETE FIELD OutputRoot.XML;
+		IF ResponseMsg IS NOT NULL AND TRIM(ResponseMsg) <> '' THEN
+			SET ResponseCode = 404;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');			
+		END IF;
+		
 		IF OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode IS NULL OR TRIM(OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode) = '' THEN
 			SET ResponseCode = 501;
 			SET ResponseMsg = 'Failed with UNKNOWN errors';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS') ;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
 		END IF;
 		RETURN TRUE;
 	END;
