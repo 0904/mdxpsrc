@@ -6,6 +6,8 @@ CREATE COMPUTE MODULE ExceptionHandler_ExceptionHandler
 	BEGIN
 		IF HttpExceptionHandler() THEN
 			IF OutputLocalEnvironment.HttpRetry = 'Y' THEN
+				-- set request URL
+				SET OutputLocalEnvironment.Destination.HTTP.RequestURL = InputLocalEnvironment.Destination.HTTP.RequestURL;
 				-- set token
 				CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
 				SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
