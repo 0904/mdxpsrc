@@ -77,7 +77,7 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = Sender;
 			IF ReceiverOrg <> 'MDXP' THEN
 				IF ExtPublish IS FALSE THEN
-					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'RQ_MDXP_TO_DDXP_R';
+					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'RQ_MDXP_TO_DDXP_S';
 					PROPAGATE TO TERMINAL 'out';
 					SET ExtPublish = TRUE;
 				END IF;

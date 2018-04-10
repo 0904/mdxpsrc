@@ -35,7 +35,7 @@ CREATE COMPUTE MODULE mdxpwebservice_pre_check_msg
 		
 		-- validate FTRQ
 		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
-		IF CONTAINS(ServiceCode,'IFRQ') THEN
+		IF ENDSWITH(ServiceCode,'_IFRQ') THEN
 			IF EXISTS(OutputRoot.MQMD[]) IS FALSE THEN		
 				SET ResponseCode = 208;
 				SET ResponseMsg = '全表请求只能通过MQ通道处理';

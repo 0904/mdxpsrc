@@ -11,7 +11,7 @@ CREATE COMPUTE MODULE mdxpmqservice_FullRequestFilter
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = InputRoot.XMLNSC.Msg.Head.Svc_Receiver;
 		SET OutputLocalEnvironment.msgType = '2';
 		PROPAGATE TO TERMINAL 'out';
-		IF InputRoot.XMLNSC.Msg.Body.Full = 'Y' AND LOWER(InputRoot.XMLNSC.Msg.Body.IsFinish) = 'false' THEN
+		IF InputRoot.XMLNSC.Msg.Body.IsFinish IS NOT NULL AND LOWER(InputRoot.XMLNSC.Msg.Body.IsFinish) = 'false' THEN
 			DECLARE Sequence CHARACTER;
 			SET Sequence = InputRoot.XMLNSC.Msg.Body.Sequence;
 			SET OutputRoot.Properties = InputRoot.Properties;
