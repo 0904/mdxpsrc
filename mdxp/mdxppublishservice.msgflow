@@ -33,7 +33,7 @@
       <nodes xmi:type="common_logger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="398,16">
         <translation xmi:type="utility:ConstantString" string="input_log"/>
       </nodes>
-      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="41,76" queueName="LQ_SUBSYS_TO_MDXP_S" destinationQueueManagerName="MDXPQMGR" validateTiming="complete" transactionMode="no">
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="41,76" queueName="LQ_SUBSYS_TO_MDXP_S" destinationQueueManagerName="MDXPQMGR" messageDomainProperty="XMLNSC" validateTiming="complete" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="Publish_MDXP"/>
       </nodes>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
