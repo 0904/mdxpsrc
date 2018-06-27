@@ -1,0 +1,19 @@
+BROKER SCHEMA db
+
+
+CREATE COMPUTE MODULE dbmaintenanceservice_dbrequestdispatch
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		IF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'SERVICE') THEN
+			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'SERVICE';
+		ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'SUBSCRIBE') THEN
+   			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'SUBSCRIBE';
+		ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'SYSTEMUSER') THEN
+			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'SYSTEMUSER';
+		END IF;
+   			
+		RETURN TRUE;
+	END;
+
+END MODULE;

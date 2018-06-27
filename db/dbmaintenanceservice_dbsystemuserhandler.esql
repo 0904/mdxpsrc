@@ -1,0 +1,78 @@
+BROKER SCHEMA db
+
+
+CREATE COMPUTE MODULE dbmaintenanceservice_dbsystemuserhandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE I INTEGER 0;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(OutputRoot.XMLNSC.Msg.Body.SystemUsers.SystemUser[]);
+		WHILE I < J DO
+			DECLARE RF_SystemUser REFERENCE TO OutputRoot.XMLNSC.Msg.Body.SystemUsers.SystemUser[I];
+			IF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'REGSTER') THEN
+				CALL DBSystemUserHandler_add(RF_SystemUser);
+			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'UPDATE') THEN
+				CALL DBSystemUserHandler_mod(RF_SystemUser);
+			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'UNSUB') THEN
+				CALL DBSystemUserHandler_del(RF_SystemUser);
+			END IF;
+			SET I = I + 1;
+		END WHILE;
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE DBSystemUserHandler_add(IN RF_SystemUser REFERENCE) BEGIN
+		DECLARE SystemUserOrg   CHARACTER;
+		DECLARE SystemUserCode  CHARACTER;
+		DECLARE SystemUserDesc  CHARACTER;
+		DECLARE InsTime	        CHARACTER;
+		DECLARE LastUpdTime     CHARACTER;
+		DECLARE Creator	        CHARACTER;
+		DECLARE Modifier        CHARACTER;
+		
+		SET SystemUserOrg = TRIM(RF_SystemUser.SystemUserOrg);
+		SET SystemUserCode = TRIM(RF_SystemUser.SystemUserCode);
+		SET SystemUserDesc = TRIM(RF_SystemUser.SystemUserDesc);
+		SET InsTime = CURRENT_TIMESTAMP;
+		SET LastUpdTime = CURRENT_TIMESTAMP;
+		SET Creator = 'Admin';
+		SET Modifier = 'Admin';
+		
+		INSERT INTO ESB.SYSTEMUSER(PK_SYSTEMUSER,SYSTEMUSER_ORG,SYSTEMUSER_CODE,SYSTEMUSER_DESC,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER) VALUES (UUIDASCHAR,SystemUserOrg,SystemUserCode,SystemUserDesc,InsTime,LastUpdTime,Creator,Modifier);
+	END;
+	
+	CREATE PROCEDURE DBSystemUserHandler_mod(IN RF_SystemUser REFERENCE) BEGIN
+		DECLARE SystemUserOrg   CHARACTER;
+		DECLARE SystemUserCode  CHARACTER;
+		DECLARE SystemUserDesc  CHARACTER;
+		DECLARE InsTime	        CHARACTER;
+		DECLARE LastUpdTime     CHARACTER;
+		DECLARE Creator	        CHARACTER;
+		DECLARE Modifier        CHARACTER;
+		
+		SET SystemUserOrg = TRIM(RF_SystemUser.SystemUserOrg);
+		SET SystemUserCode = TRIM(RF_SystemUser.SystemUserCode);
+		SET SystemUserDesc = TRIM(RF_SystemUser.SystemUserDesc);
+		SET InsTime = CURRENT_TIMESTAMP;
+		SET LastUpdTime = CURRENT_TIMESTAMP;
+		SET Creator = 'Admin';
+		SET Modifier = 'Admin';
+		
+		UPDATE ESB.SYSTEMUSER AS T 
+			SET SYSTEMUSER_ORG = SystemUserOrg,
+				SYSTEMUSER_DESC = SystemUserDesc,
+				INSERT_TIMESTAMP = InsTime,
+				LAST_UPDATE_TIMESTAMP = LastUpdTime,
+				CREATOR = Creator
+			WHERE T.SYSTEMUSER_CODE = SystemUserCode;
+				
+	END;
+	
+	CREATE PROCEDURE DBSystemUserHandler_del(IN RF_SystemUser REFERENCE) BEGIN
+		DECLARE SystemUserCode  CHARACTER;
+		SET SystemUserCode = TRIM(RF_SystemUser.SystemUserCode);
+		
+		DELETE FROM ESB.SYSTEMUSER AS T WHERE T.SYSTEMUSER_CODE = SystemUserCode;
+	END;
+END MODULE;

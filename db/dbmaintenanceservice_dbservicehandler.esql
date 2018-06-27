@@ -1,0 +1,139 @@
+BROKER SCHEMA db
+
+
+CREATE COMPUTE MODULE dbmaintenanceservice_dbservicehandler
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		DECLARE I INTEGER 0;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(OutputRoot.XMLNSC.Msg.Body.Services.Serivce[]);
+		WHILE I < J DO
+			DECLARE RF_Service REFERENCE TO OutputRoot.XMLNSC.Msg.Body.Services.Serivce[I];
+			IF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'ADD') THEN
+				CALL DBServiceHandler_add(OutputRoot, RF_Service);
+			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'MOD') THEN
+				CALL DBServiceHandler_mod(OutputRoot, RF_Service);
+			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'DEL') THEN
+				CALL DBServiceHandler_del(OutputRoot, RF_Service);
+			END IF;
+			SET I = I + 1;
+		END WHILE;
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE DBServiceHandler_add(IN RF_Out REFERENCE, IN RF_Service REFERENCE) BEGIN
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE OwnerOrg        CHARACTER;
+		DECLARE Owner           CHARACTER;
+		DECLARE Enabled_Flag    INTEGER 1;
+		DECLARE Type		    CHARACTER;
+		DECLARE ServiceCatalog  CHARACTER;
+		DECLARE Remark	        CHARACTER;
+		DECLARE InsTime	        CHARACTER;
+		DECLARE LastUpdTime     CHARACTER;
+		DECLARE Creator	        CHARACTER;
+		DECLARE Modifier        CHARACTER;
+		DECLARE ServiceType		CHARACTER;
+		DECLARE ServiceProxyUrl CHARACTER;
+		DECLARE ServiceRealUrl 	CHARACTER;
+		DECLARE ServiceExample	CHARACTER;
+		
+		SET ServiceCode = TRIM(RF_Service.Svc_ServiceCode);
+		SET ServiceVersion = TRIM(RF_Service.Svc_Version);
+		SET OwnerOrg = RF_Service.Svc_Provider_Org;
+		SET Owner = RF_Service.Svc_Provider;
+		IF CONTAINS(RF_Out.XMLNSC.Msg.Head.Svc_ServiceCode, 'MQ') THEN
+			SET Type = 'M';
+		ELSEIF CONTAINS(RF_Out.XMLNSC.Msg.Head.Svc_ServiceCode, 'HTTP') THEN
+			SET ServiceCatalog = RF_Service.Svc_Catalog;
+			IF ServiceCatalog = 'WS' THEN
+				SET Type = 'W';
+			ELSEIF ServiceCatalog = 'REST' THEN
+				SET Type = 'R';
+			END IF;
+		END IF;
+		SET Remark = RF_Service.Svc_Desc;
+		SET InsTime = CURRENT_TIMESTAMP;
+		SET LastUpdTime = CURRENT_TIMESTAMP;
+		SET Creator = 'Admin';
+		SET Modifier = 'Admin';
+		SET ServiceType = CAST(RF_Service.Svc_Type AS CHARACTER CCSID 1381);
+		SET ServiceProxyUrl = RF_Service.Svc_ProxyUrl;
+		SET ServiceRealUrl = RF_Service.Svc_RealUrl;
+		SET ServiceExample = RF_Service.Svc_Example;
+		
+		INSERT INTO ESB.SERVICE(PK_SERVICE,SERVICE_CODE,SERVICE_VERSION,OWNER_ORG,OWNER,ENABLED_FLAG,TYPE,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_PROXYURL,SVC_REALURL,SVC_EXAMPLE) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,OwnerOrg,Owner,Enabled_Flag,Type,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceProxyUrl,ServiceRealUrl,ServiceExample);
+	END;
+	
+	CREATE PROCEDURE DBServiceHandler_mod(IN RF_Out REFERENCE, IN RF_Service REFERENCE) BEGIN
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE OwnerOrg        CHARACTER;
+		DECLARE Owner           CHARACTER;
+		DECLARE Enabled_Flag    INTEGER 1;
+		DECLARE Type		    CHARACTER;
+		DECLARE ServiceCatalog  CHARACTER;
+		DECLARE Remark	        CHARACTER;
+		DECLARE InsTime	        CHARACTER;
+		DECLARE LastUpdTime     CHARACTER;
+		DECLARE Creator	        CHARACTER;
+		DECLARE Modifier        CHARACTER;
+		DECLARE ServiceType		CHARACTER;
+		DECLARE ServiceProxyUrl CHARACTER;
+		DECLARE ServiceRealUrl 	CHARACTER;
+		DECLARE ServiceExample	CHARACTER;
+		
+		SET ServiceCode = TRIM(RF_Service.Svc_ServiceCode);
+		SET ServiceVersion = TRIM(RF_Service.Svc_Version);
+		SET OwnerOrg = RF_Service.Svc_Provider_Org;
+		SET Owner = RF_Service.Svc_Provider;
+		IF CONTAINS(RF_Out.XMLNSC.Msg.Head.Svc_ServiceCode, 'MQ') THEN
+			SET Type = 'M';
+		ELSEIF CONTAINS(RF_Out.XMLNSC.Msg.Head.Svc_ServiceCode, 'HTTP') THEN
+			SET ServiceCatalog = RF_Service.Svc_Catalog;
+			IF ServiceCatalog = 'WS' THEN
+				SET Type = 'W';
+			ELSEIF ServiceCatalog = 'REST' THEN
+				SET Type = 'R';
+			END IF;
+		END IF;
+		SET Remark = RF_Service.Svc_Desc;
+		SET InsTime = CURRENT_TIMESTAMP;
+		SET LastUpdTime = CURRENT_TIMESTAMP;
+		SET Creator = 'Admin';
+		SET Modifier = 'Admin';
+		SET ServiceType = CAST(RF_Service.Svc_Type AS CHARACTER CCSID 1381);
+		SET ServiceProxyUrl = RF_Service.Svc_ProxyUrl;
+		SET ServiceRealUrl = RF_Service.Svc_RealUrl;
+		SET ServiceExample = RF_Service.Svc_Example;
+		
+		UPDATE ESB.SERVICE AS T 
+			SET OWNER_ORG = OwnerOrg,
+				OWNER = Owner,
+				ENABLED_FLAG = Enabled_Flag,
+				TYPE = Type,
+				REMARK = Remark,
+				INSERT_TIMESTAMP = InsTime,
+				LAST_UPDATE_TIMESTAMP = LastUpdTime,
+				CREATOR = Creator,
+				MODIFIER = Modifier,
+				SVC_TYPE = ServiceType,
+				SVC_PROXYURL = ServiceProxyUrl,
+				SVC_REALURL = ServiceRealUrl,
+				SVC_EXAMPLE = ServiceExample
+			WHERE T.SERVICE_CODE = ServiceCode AND T.SERVICE_VERSION = ServiceVersion;
+				
+	END;
+	
+	CREATE PROCEDURE DBServiceHandler_del(IN RF_Out REFERENCE, IN RF_Service REFERENCE) BEGIN
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		
+		SET ServiceCode = TRIM(RF_Service.Svc_ServiceCode);
+		SET ServiceVersion = TRIM(RF_Service.Svc_Version);
+		
+		DELETE FROM ESB.SERVICE AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SERVICE_VERSION = ServiceVersion;
+	END;
+END MODULE;
