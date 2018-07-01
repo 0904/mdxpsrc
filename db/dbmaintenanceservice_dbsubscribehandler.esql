@@ -54,7 +54,7 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
 			WHILE K < R DO
 				SET Sender = OutputLocalEnvironment.Split.Columns[R];
-				INSERT INTO ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
+				INSERT INTO Database.ESBDS.ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
 				SET K = K + 1;
 			END WHILE;
 		ELSEIF CONTAINS(Receiver, ',') THEN
@@ -64,11 +64,11 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
 			WHILE K < R DO
 				SET Receiver = OutputLocalEnvironment.Split.Columns[R];
-				INSERT INTO ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
+				INSERT INTO Database.ESBDS.ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
 				SET K = K + 1;
 			END WHILE;
 		ELSE
-			INSERT INTO ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
+			INSERT INTO Database.ESBDS.ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
 		END IF;
 		
 	END;
@@ -93,7 +93,7 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
 			WHILE K < R DO
 				SET Sender = OutputLocalEnvironment.Split.Columns[R];
-					DELETE FROM ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
+					DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
 				SET K = K + 1;
 			END WHILE;
 		ELSEIF CONTAINS(Receiver, ',') THEN
@@ -103,11 +103,11 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
 			WHILE K < R DO
 				SET Receiver = OutputLocalEnvironment.Split.Columns[R];
-					DELETE FROM ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
+					DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
 				SET K = K + 1;
 			END WHILE;
 		ELSE
-			DELETE FROM ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
+			DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
 		END IF;
 		
 	END;

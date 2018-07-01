@@ -5,17 +5,17 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbservicehandler
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 		SET OutputRoot = InputRoot;
-		DECLARE I INTEGER 0;
+		DECLARE I INTEGER 1;
 		DECLARE J INTEGER;
-		SET J = CARDINALITY(OutputRoot.XMLNSC.Msg.Body.Services.Serivce[]);
-		WHILE I < J DO
-			DECLARE RF_Service REFERENCE TO OutputRoot.XMLNSC.Msg.Body.Services.Serivce[I];
+		SET J = CARDINALITY(OutputRoot.XMLNSC.Msg.Body.Services.Service[]);
+		WHILE I <= J DO
+			DECLARE RF_Service REFERENCE TO OutputRoot.XMLNSC.Msg.Body.Services.Service[I];
 			IF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'ADD') THEN
 				CALL DBServiceHandler_add(OutputRoot, RF_Service);
 			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'MOD') THEN
-				CALL DBServiceHandler_mod(OutputRoot, RF_Service);
+				CALL DBServiceHandler_mod(OutputRoot, OutputRoot.XMLNSC.Msg.Body.Services.Service[I]);
 			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'DEL') THEN
-				CALL DBServiceHandler_del(OutputRoot, RF_Service);
+				CALL DBServiceHandler_del(OutputRoot, OutputRoot.XMLNSC.Msg.Body.Services.Service[I]);
 			END IF;
 			SET I = I + 1;
 		END WHILE;
@@ -64,10 +64,11 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbservicehandler
 		SET ServiceRealUrl = RF_Service.Svc_RealUrl;
 		SET ServiceExample = RF_Service.Svc_Example;
 		
-		INSERT INTO ESB.SERVICE(PK_SERVICE,SERVICE_CODE,SERVICE_VERSION,OWNER_ORG,OWNER,ENABLED_FLAG,TYPE,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_PROXYURL,SVC_REALURL,SVC_EXAMPLE) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,OwnerOrg,Owner,Enabled_Flag,Type,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceProxyUrl,ServiceRealUrl,ServiceExample);
+		INSERT INTO Database.ESBDS.ESB.SERVICE(PK_SERVICE,SERVICE_CODE,SERVICE_VERSION,OWNER_ORG,OWNER,ENABLED_FLAG,TYPE,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_PROXYURL,SVC_REALURL,SVC_EXAMPLE) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,OwnerOrg,Owner,Enabled_Flag,Type,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceProxyUrl,ServiceRealUrl,ServiceExample);
 	END;
 	
 	CREATE PROCEDURE DBServiceHandler_mod(IN RF_Out REFERENCE, IN RF_Service REFERENCE) BEGIN
+		DECLARE ServiceSql      CHARACTER;
 		DECLARE ServiceCode     CHARACTER;
 		DECLARE ServiceVersion  CHARACTER;
 		DECLARE OwnerOrg        CHARACTER;
@@ -109,31 +110,20 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbservicehandler
 		SET ServiceRealUrl = RF_Service.Svc_RealUrl;
 		SET ServiceExample = RF_Service.Svc_Example;
 		
-		UPDATE ESB.SERVICE AS T 
-			SET OWNER_ORG = OwnerOrg,
-				OWNER = Owner,
-				ENABLED_FLAG = Enabled_Flag,
-				TYPE = Type,
-				REMARK = Remark,
-				INSERT_TIMESTAMP = InsTime,
-				LAST_UPDATE_TIMESTAMP = LastUpdTime,
-				CREATOR = Creator,
-				MODIFIER = Modifier,
-				SVC_TYPE = ServiceType,
-				SVC_PROXYURL = ServiceProxyUrl,
-				SVC_REALURL = ServiceRealUrl,
-				SVC_EXAMPLE = ServiceExample
-			WHERE T.SERVICE_CODE = ServiceCode AND T.SERVICE_VERSION = ServiceVersion;
-				
+		SET ServiceSql = 'UPDATE ESB.SERVICE SET REMARK = ? WHERE SERVICE_CODE = ? AND SERVICE_VERSION = ?';
+		PASSTHRU(ServiceSql, Remark, ServiceCode, ServiceVersion);
+
 	END;
 	
 	CREATE PROCEDURE DBServiceHandler_del(IN RF_Out REFERENCE, IN RF_Service REFERENCE) BEGIN
+		DECLARE ServiceSql      CHARACTER;
 		DECLARE ServiceCode     CHARACTER;
 		DECLARE ServiceVersion  CHARACTER;
 		
 		SET ServiceCode = TRIM(RF_Service.Svc_ServiceCode);
 		SET ServiceVersion = TRIM(RF_Service.Svc_Version);
 		
-		DELETE FROM ESB.SERVICE AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SERVICE_VERSION = ServiceVersion;
+		SET ServiceSql = 'DELETE FROM ESB.SERVICE WHERE SERVICE_CODE = ''' || ServiceCode || ''' AND SERVICE_VERSION = ''' || ServiceVersion || '''';
+		PASSTHRU(ServiceSql);
 	END;
 END MODULE;
