@@ -11,8 +11,11 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbrequestdispatch
    			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'SUBSCRIBE';
 		ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'SYSTEMUSER') THEN
 			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'SYSTEMUSER';
+		ELSE
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
 		END IF;
-   			
+ 
 		RETURN TRUE;
 	END;
 

@@ -5,22 +5,31 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 		SET OutputRoot = InputRoot;
-		DECLARE I INTEGER 0;
+		DECLARE Result BOOLEAN;
+		DECLARE I INTEGER 1;
 		DECLARE J INTEGER;
 		SET J = CARDINALITY(OutputRoot.XMLNSC.Msg.Body.SubScribes.SubScribe[]);
-		WHILE I < J DO
+		WHILE I <= J DO
 			DECLARE RF_SubScribe REFERENCE TO OutputRoot.XMLNSC.Msg.Body.SubScribes.SubScribe[I];
 			IF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'ADD') THEN
-				CALL DBSubScribeHandler_add(RF_SubScribe);
+				SET Result = DBSubScribeHandler_add(RF_SubScribe);
 			ELSEIF CONTAINS(OutputRoot.XMLNSC.Msg.Head.Svc_ServiceCode, 'DEL') THEN
-				CALL DBSubScribeHandler_del(RF_SubScribe);
+				SET Result = DBSubScribeHandler_del(RF_SubScribe);
+			ELSE
+				SET Result = FALSE;
+			END IF;
+			
+			IF NOT Result THEN
+				PROPAGATE TO TERMINAL 'failure';
+			    RETURN FALSE;
 			END IF;
 			SET I = I + 1;
 		END WHILE;
 		RETURN TRUE;
 	END;
 
-	CREATE PROCEDURE DBSubScribeHandler_add(IN RF_SubScribe REFERENCE) BEGIN
+	CREATE FUNCTION DBSubScribeHandler_add(IN RF_SubScribe REFERENCE) RETURNS BOOLEAN
+	BEGIN
 		DECLARE ServiceCode     CHARACTER;
 		DECLARE ServiceVersion  CHARACTER;
 		DECLARE SenderOrg       CHARACTER;
@@ -47,23 +56,27 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 		SET Sender = TRIM(RF_SubScribe.Svc_Sender);
 		SET Receiver = TRIM(RF_SubScribe.Svc_Receiver);
 		
+		IF ServiceCode IS NULL OR Sender IS NULL OR Receiver IS NULL THEN
+			RETURN FALSE;
+		END IF;
+		
 		IF CONTAINS(Sender, ',') THEN
 			CALL SPLIT(Sender, ',');
-			DECLARE K INTEGER 0;
+			DECLARE K INTEGER 1;
 			DECLARE R INTEGER;
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
-			WHILE K < R DO
-				SET Sender = OutputLocalEnvironment.Split.Columns[R];
+			WHILE K <= R DO
+				SET Sender = OutputLocalEnvironment.Split.Columns[K];
 				INSERT INTO Database.ESBDS.ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
 				SET K = K + 1;
 			END WHILE;
 		ELSEIF CONTAINS(Receiver, ',') THEN
 			CALL SPLIT(Receiver, ',');
-			DECLARE K INTEGER 0;
+			DECLARE K INTEGER 1;
 			DECLARE R INTEGER;
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
-			WHILE K < R DO
-				SET Receiver = OutputLocalEnvironment.Split.Columns[R];
+			WHILE K <= R DO
+				SET Receiver = OutputLocalEnvironment.Split.Columns[K];
 				INSERT INTO Database.ESBDS.ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
 				SET K = K + 1;
 			END WHILE;
@@ -71,14 +84,18 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 			INSERT INTO Database.ESBDS.ESB.ROUTE_CONFIG(PK_ROUTE,SERVICE_CODE,SERVICE_VERSION,SENDER_ORG,SENDER,RECEIVER_ORG,RECEIVER,ENABLED_FLAG,REMARK,INSERT_TIMESTAMP,LAST_UPDATE_TIMESTAMP,CREATOR,MODIFIER,SVC_TYPE,SVC_METHOD) VALUES (UUIDASCHAR,ServiceCode,ServiceVersion,SenderOrg,Sender,ReceiverOrg,Receiver,Enabled_Flag,Remark,InsTime,LastUpdTime,Creator,Modifier,ServiceType,ServiceMethod);
 		END IF;
 		
+		RETURN TRUE;
+		
 	END;
 	
-	CREATE PROCEDURE DBSubScribeHandler_del(IN RF_SubScribe REFERENCE) BEGIN
+	CREATE FUNCTION DBSubScribeHandler_del(IN RF_SubScribe REFERENCE) RETURNS BOOLEAN
+	BEGIN
 		DECLARE ServiceCode     CHARACTER;
 		DECLARE ServiceVersion  CHARACTER;
 		DECLARE Sender          CHARACTER;
 		DECLARE Receiver        CHARACTER;
 		DECLARE ServiceType		CHARACTER;
+		DECLARE DeleteSql       CHARACTER;
 		
 		SET ServiceCode = TRIM(RF_SubScribe.Svc_ServiceCode);
 		SET ServiceVersion = TRIM(RF_SubScribe.Svc_Version);
@@ -86,30 +103,42 @@ CREATE COMPUTE MODULE dbmaintenanceservice_dbsubscribehandler
 		SET Sender = TRIM(RF_SubScribe.Svc_Sender);
 		SET Receiver = TRIM(RF_SubScribe.Svc_Receiver);
 		
+		IF ServiceCode IS NULL OR Sender IS NULL OR Receiver is NULL THEN
+			RETURN FALSE;
+		END IF;
+		
 		IF CONTAINS(Sender, ',') THEN
 			CALL SPLIT(Sender, ',');
-			DECLARE K INTEGER 0;
+			DECLARE K INTEGER 1;
 			DECLARE R INTEGER;
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
-			WHILE K < R DO
-				SET Sender = OutputLocalEnvironment.Split.Columns[R];
-					DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
+			WHILE K <= R DO
+				SET Sender = OutputLocalEnvironment.Split.Columns[K];
+				
+				SET DeleteSql = 'DELETE FROM ESB.ROUTE_CONFIG WHERE SENDER=? AND RECEIVER=? AND SVC_TYPE=? AND SERVICE_CODE = ?';
+				PASSTHRU(DeleteSql, Sender, Receiver, ServiceType, ServiceCode);
+				-- DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
 				SET K = K + 1;
 			END WHILE;
 		ELSEIF CONTAINS(Receiver, ',') THEN
 			CALL SPLIT(Receiver, ',');
-			DECLARE K INTEGER 0;
+			DECLARE K INTEGER 1;
 			DECLARE R INTEGER;
 			SET R = CARDINALITY(OutputLocalEnvironment.Split.Columns[]);
-			WHILE K < R DO
-				SET Receiver = OutputLocalEnvironment.Split.Columns[R];
-					DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
+			WHILE K <= R DO
+				SET Receiver = OutputLocalEnvironment.Split.Columns[K];
+				SET DeleteSql = 'DELETE FROM ESB.ROUTE_CONFIG WHERE SENDER=? AND RECEIVER=? AND SVC_TYPE=? AND SERVICE_CODE = ?';
+				PASSTHRU(DeleteSql, Sender, Receiver, ServiceType, ServiceCode);
+				--DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
 				SET K = K + 1;
 			END WHILE;
 		ELSE
-			DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
+			SET DeleteSql = 'DELETE FROM ESB.ROUTE_CONFIG WHERE SENDER=? AND RECEIVER=? AND SVC_TYPE=? AND SERVICE_CODE = ?';
+			PASSTHRU(DeleteSql, Sender, Receiver, ServiceType, ServiceCode);
+			--DELETE FROM Database.ESBDS.ESB.ROUTE_CONFIG AS T WHERE T.SERVICE_CODE = ServiceCode AND T.SENDER = Sender AND T.RECEIVER = Receiver AND T.SVC_TYPE = ServiceType;
 		END IF;
 		
+		RETURN TRUE;
 	END;
 	
 	CREATE PROCEDURE SPLIT(IN SRC CHARACTER, IN DELIM CHARACTER)
