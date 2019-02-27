@@ -56,6 +56,8 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
 			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		END IF;
+		
+		SET InputLocalEnvironment.TargetType = 'TOPIC';
 
 		RETURN TRUE;
 	END;

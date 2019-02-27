@@ -1,0 +1,79 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE RouteToSubSystem_RouteToQ
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+        DECLARE Result BOOLEAN;
+		SET Result = SetQueueTarget();
+		IF Result THEN
+			RETURN TRUE;
+		ELSE
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
+		END IF;
+	END;
+
+
+	CREATE FUNCTION SetQueueTarget() RETURNS BOOLEAN
+	
+	BEGIN
+		
+	    DECLARE ReceiverOrg    CHARACTER;
+		DECLARE Receiver       CHARACTER;
+		DECLARE ResponseCode   INTEGER 0;
+		DECLARE ResponseMsg    CHARACTER;
+		DECLARE TargetInfo     ROW;
+		DECLARE ServiceSql     CHARACTER;
+		DECLARE TargetTopicQ   CHARACTER;
+		DECLARE TargetResQ     CHARACTER;
+		DECLARE TargetType     CHARACTER;
+		
+		SET OutputRoot = InputRoot;
+		SET ReceiverOrg = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org);
+		IF ReceiverOrg <> 'MDXP' THEN
+			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The receiver orgranization (' || ReceiverOrg || ') of this message is not MDXP.';
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			RETURN FALSE;
+		END IF;
+		
+		SET Receiver = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Receiver);
+		IF Receiver IS NULL OR Receiver = '' THEN
+			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
+			SET ResponseCode = 202;
+			SET ResponseMsg = 'The receiver of this message is not set.';
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER CCSID 1208);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			RETURN FALSE;
+		END IF;
+	
+		SET ServiceSql = 'SELECT TARGET_TOPIC_QUEUE, TARGET_RESPONSE_QUEUE FROM ESB.TARGET_QUEUE_CONFIG WHERE RECEIVER_ORG=? AND RECEIVER=? FETCH FIRST 1 ROW ONLY';
+		SET TargetInfo.Target[] = PASSTHRU(ServiceSql, ReceiverOrg, Receiver);
+		
+		SET TargetType = TRIM(InputLocalEnvironment.TargetType);
+		
+		IF TargetType = 'TOPIC' THEN
+			SET TargetTopicQ = TargetInfo.Target.TARGET_TOPIC_QUEUE;
+			IF TargetTopicQ IS NULL OR TRIM(TargetTopicQ) = '' THEN
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_S';
+			ELSE
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetTopicQ;
+			END IF;
+		ELSE 
+			SET TargetResQ = TargetInfo.Target.TARGET_RESPONSE_QUEUE;
+			IF TargetResQ IS NULL OR TRIM(TargetResQ) = '' THEN
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_R';
+			ELSE
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetResQ;
+			END IF;
+		END IF;
+		
+		RETURN TRUE;	
+		
+	END;
+END MODULE;

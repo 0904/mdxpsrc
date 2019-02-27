@@ -82,8 +82,8 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 					SET ExtPublish = TRUE;
 				END IF;
 			ELSE
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_S';
-				PROPAGATE TO TERMINAL 'out';
+				SET InputLocalEnvironment.TargetType = 'TOPIC';
+				PROPAGATE TO TERMINAL 'out1';
 			END IF;				
 			SET I = I + 1;
 		END WHILE;
