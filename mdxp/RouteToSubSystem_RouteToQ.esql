@@ -5,6 +5,7 @@ CREATE COMPUTE MODULE RouteToSubSystem_RouteToQ
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
         DECLARE Result BOOLEAN;
+        SET OutputRoot = InputRoot;
 		SET Result = SetQueueTarget();
 		IF Result THEN
 			RETURN TRUE;
@@ -29,7 +30,7 @@ CREATE COMPUTE MODULE RouteToSubSystem_RouteToQ
 		DECLARE TargetResQ     CHARACTER;
 		DECLARE TargetType     CHARACTER;
 		
-		SET OutputRoot = InputRoot;
+		
 		SET ReceiverOrg = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org);
 		IF ReceiverOrg <> 'MDXP' THEN
 			DELETE FIELD OutputRoot.XMLNSC.Msg.Body;
@@ -60,16 +61,16 @@ CREATE COMPUTE MODULE RouteToSubSystem_RouteToQ
 		IF TargetType = 'TOPIC' THEN
 			SET TargetTopicQ = TargetInfo.Target.TARGET_TOPIC_QUEUE;
 			IF TargetTopicQ IS NULL OR TRIM(TargetTopicQ) = '' THEN
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_S';
+				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_S';
 			ELSE
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetTopicQ;
+				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetTopicQ;
 			END IF;
 		ELSE 
 			SET TargetResQ = TargetInfo.Target.TARGET_RESPONSE_QUEUE;
 			IF TargetResQ IS NULL OR TRIM(TargetResQ) = '' THEN
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_R';
+				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_R';
 			ELSE
-				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetResQ;
+				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetResQ;
 			END IF;
 		END IF;
 		

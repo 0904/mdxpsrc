@@ -82,7 +82,7 @@ CREATE COMPUTE MODULE mdxppublishservice_RouteToQ
 					SET ExtPublish = TRUE;
 				END IF;
 			ELSE
-				SET InputLocalEnvironment.TargetType = 'TOPIC';
+				SET OutputLocalEnvironment.TargetType = 'TOPIC';
 				PROPAGATE TO TERMINAL 'out1';
 			END IF;				
 			SET I = I + 1;

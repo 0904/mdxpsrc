@@ -57,7 +57,8 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
 			RETURN FALSE;
 		END IF;
 		
-		SET InputLocalEnvironment.TargetType = 'TOPIC';
+		
+		SET OutputLocalEnvironment.TargetType = 'TOPIC';
 
 		RETURN TRUE;
 	END;

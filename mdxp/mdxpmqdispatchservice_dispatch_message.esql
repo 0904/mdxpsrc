@@ -10,7 +10,7 @@ CREATE COMPUTE MODULE mdxpmqdispatchservice_dispatch_message
 		DECLARE ReceiverOrg     CHARACTER;
 		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
 		SET ReceiverOrg = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org);
-		IF CONTAINS(ServiceCode,'MDXP') IS FALSE AND ReceiverOrg = 'MDXP' THEN
+		IF STARTSWITH(ServiceCode,'MDXP_') IS FALSE AND ReceiverOrg = 'MDXP' THEN
 			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'mqrespservice';
 		ELSE
 			SET OutputLocalEnvironment.Destination.RouterList.DestinationData[1].labelName = 'mqservice';
