@@ -1,0 +1,19 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE mdxpinnerresservice_prelog
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		-- log message type
+		SET OutputLocalEnvironment.msgType = '5';
+		-- uuid validation
+		DECLARE Uuid CHARACTER;
+		SET Uuid = OutputRoot.XMLNSC.Msg.Head.Svc_SerialNumber;
+		IF Uuid IS NULL OR TRIM(Uuid) = '' THEN
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_SerialNumber = UUIDASCHAR;
+		END IF;
+		RETURN TRUE;
+	END;
+
+END MODULE;

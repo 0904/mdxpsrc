@@ -3,14 +3,15 @@ BROKER SCHEMA mdxp
 CREATE COMPUTE MODULE mdxpmqservice_FullRequestFilter
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
-		SET OutputRoot = InputRoot;
-		-- dest conversion
+		SET OutputRoot.Properties = InputRoot.Properties;
+		SET OutputRoot.XMLNSC = InputRoot.XMLNSC;		
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org = InputRoot.XMLNSC.Msg.Head.Svc_Sender_Org;
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver = InputRoot.XMLNSC.Msg.Head.Svc_Sender;
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org = InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org;
 		SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = InputRoot.XMLNSC.Msg.Head.Svc_Receiver;
 		SET OutputLocalEnvironment.msgType = '2';
 		PROPAGATE TO TERMINAL 'out';
+		
 		IF InputRoot.XMLNSC.Msg.Body.IsFinish IS NOT NULL AND LOWER(InputRoot.XMLNSC.Msg.Body.IsFinish) = 'false' THEN
 			DECLARE Sequence CHARACTER;
 			SET Sequence = InputRoot.XMLNSC.Msg.Body.Sequence;

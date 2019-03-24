@@ -20,46 +20,31 @@ CREATE COMPUTE MODULE mdxppublishservice_pre_check_msg
 	BEGIN
 		DECLARE ServiceCode     CHARACTER;
 		DECLARE ServiceVersion  CHARACTER;
-		DECLARE SenderOrg       CHARACTER;
-		DECLARE Sender          CHARACTER;
-		DECLARE ReceiverOrg     CHARACTER;
-		DECLARE Receiver        CHARACTER;
 		DECLARE ResponseCode    INTEGER 0;
 		DECLARE ResponseMsg     CHARACTER;
-		DECLARE ServiceSql      CHARACTER;
-		DECLARE ServiceInfo     ROW;
-		DECLARE SQLState1       CHARACTER;   
-        DECLARE SQLErrorText1   CHARACTER;   
-        DECLARE SQLCode1        INTEGER;   
-        DECLARE SQLNativeError1 INTEGER;
 		
 		-- validate service code
 		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
-		IF ServiceCode IS NULL OR TRIM(ServiceCode) = '' THEN
+		IF ServiceCode IS NULL OR ServiceCode = '' THEN
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The ServiceCode (' || ServiceCode || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
-			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		END IF;
 		
 		-- validate service version
 		SET ServiceVersion = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Version);
-		IF ServiceVersion IS NULL OR TRIM(ServiceVersion) = '' THEN			
+		IF ServiceVersion IS NULL OR ServiceVersion = '' THEN			
 			SET ResponseCode = 202;
 			SET ResponseMsg = 'The ServiceVersion (' || ServiceVersion || ') shoud not be null.';
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
 			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
-			PROPAGATE TO TERMINAL 'failure';
 			RETURN FALSE;
 		END IF;
-		
-		
-		SET OutputLocalEnvironment.TargetType = 'TOPIC';
-
+				
 		RETURN TRUE;
 	END;
 END MODULE;

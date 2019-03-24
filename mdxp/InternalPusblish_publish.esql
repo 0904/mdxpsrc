@@ -1,0 +1,80 @@
+BROKER SCHEMA mdxp
+
+
+CREATE COMPUTE MODULE InternalPusblish_publish
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+				-- copy message
+		SET OutputRoot = InputRoot;
+		
+		DECLARE ServiceCode     CHARACTER;
+		DECLARE ServiceVersion  CHARACTER;
+		DECLARE SenderOrg       CHARACTER;
+		DECLARE Sender          CHARACTER;
+		DECLARE ReceiverOrg     CHARACTER;
+		DECLARE Receiver        CHARACTER;
+		DECLARE ResponseCode    INTEGER 0;
+		DECLARE ResponseMsg     CHARACTER;
+		DECLARE Servicesql      CHARACTER;
+		DECLARE ServiceInfo     ROW;
+		DECLARE SQLState1       CHARACTER;   
+        DECLARE SQLErrorText1   CHARACTER;   
+        DECLARE SQLCode1        INTEGER;   
+        DECLARE SQLNativeError1 INTEGER;
+		
+		-- validate receiver org and receiver
+		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
+		SET ServiceVersion = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Version);
+			
+		SET Servicesql = 'SELECT * FROM ESB.ROUTE_CONFIG WHERE RECEIVER_ORG = ''MDXP'' AND SERVICE_CODE = ''' || ServiceCode || ''' AND SERVICE_VERSION = ''' || ServiceVersion || '''';
+		SET ServiceInfo.Service[] = PASSTHRU(Servicesql);
+			
+		--Retrieve the database return codes --
+	    SET SQLState1 = SQLSTATE;
+	    SET SQLCode1 = SQLCODE;
+	    SET SQLErrorText1 = SQLERRORTEXT;
+	    SET SQLNativeError1 = SQLNATIVEERROR;
+		
+		IF SQLCode1 <> 0 THEN			
+			SET ResponseCode = 500;
+			SET ResponseMsg = 'Failed to access database. SQLCODE=' || CAST(SQLCode1 AS CHARACTER) || '; SQLNativeError=' || CAST(SQLNativeError1 AS CHARACTER) || '; SQLSTATE=' || SQLState1 || '; SQLErrorText=' || SQLErrorText1;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
+		END IF;
+		
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(ServiceInfo.Service[]);
+		IF J IS NULL OR J = 0 THEN
+			SET ResponseCode = 204;
+			SET ResponseMsg = 'The service (' || ServiceCode || ') has no subscription (' || ServiceVersion || ') in mdxp.';
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			PROPAGATE TO TERMINAL 'failure';
+			RETURN FALSE;
+		END IF;
+		WHILE I <= J DO
+			SET OutputRoot = InputRoot;
+			SET ReceiverOrg = ServiceInfo.Service[I].RECEIVER_ORG;
+			SET Receiver = ServiceInfo.Service[I].RECEIVER;
+			SET SenderOrg = ServiceInfo.Service[I].SENDER_ORG;
+			SET Sender = ServiceInfo.Service[I].SENDER;
+			-- set ReceiverOrg/SenderOrg and Receiver/Sender when records found
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org = ReceiverOrg;
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Receiver = Receiver;
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender_Org = SenderOrg;
+			SET OutputRoot.XMLNSC.Msg.Head.Svc_Sender = Sender;
+					
+			SET InputLocalEnvironment.TargetType = 'TOPIC';
+			PROPAGATE TO TERMINAL 'out';							
+			SET I = I + 1;
+		END WHILE;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

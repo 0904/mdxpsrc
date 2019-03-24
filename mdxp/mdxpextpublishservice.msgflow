@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFlowOrder.msgnode="ComIbmFlowOrder.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:common_ExceptionHandler.subflow="common/ExceptionHandler.subflow" xmlns:common_logger.subflow="common/logger.subflow" xmlns:common_logger_error.subflow="common/logger_error.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
-    xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mdxp_RouteToSubSystem.subflow="mdxp/RouteToSubSystem.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="mdxp/mdxpextpublishservice.msgflow" nsPrefix="mdxp_mdxpextpublishservice.msgflow">
+    xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mdxp_InternalPusblish.subflow="mdxp/InternalPusblish.subflow" xmlns:mdxp_RouteToSubSystem.subflow="mdxp/RouteToSubSystem.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="mdxp/mdxpextpublishservice.msgflow" nsPrefix="mdxp_mdxpextpublishservice.msgflow">
   <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
     <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
     <translation xmi:type="utility:TranslatableString" key="mdxpextpublishservice" bundleName="mdxp/mdxpextpublishservice" pluginId="mdxpsrc"/>
@@ -9,7 +9,7 @@
     <shortDescription xmi:type="utility:ConstantString" string="receive messages pulished from ADXP/SODB/FDXP"/>
     <version xmi:type="utility:ConstantString" string="1.0.0"/>
     <composition>
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="690,107" destinationQueueManagerName="MDXPQMGR" destinationMode="list">
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="781,95" destinationQueueManagerName="MDXPQMGR" destinationMode="list">
         <translation xmi:type="utility:ConstantString" string="Publish_Output"/>
       </nodes>
       <nodes xmi:type="ComIbmFlowOrder.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="258,105">
@@ -21,10 +21,10 @@
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="358,110" computeExpression="esql://routine/mdxp#mdxppublishservice_pre_check_msg.Main" computeMode="all">
         <translation xmi:type="utility:ConstantString" string="pre_check_msg"/>
       </nodes>
-      <nodes xmi:type="common_ExceptionHandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="563,275">
+      <nodes xmi:type="common_ExceptionHandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="704,290">
         <translation xmi:type="utility:ConstantString" string="catch_input_exception"/>
       </nodes>
-      <nodes xmi:type="common_logger_error.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="761,271">
+      <nodes xmi:type="common_logger_error.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="844,286">
         <translation xmi:type="utility:ConstantString" string="logger_error"/>
       </nodes>
       <nodes xmi:type="common_logger.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="398,16">
@@ -39,8 +39,11 @@
       <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="33,208" queueName="LQ_FDXP_TO_MDXP_S" destinationQueueManagerName="MDXPQMGR" messageDomainProperty="XMLNSC" validateTiming="complete" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="Publish_FDXP"/>
       </nodes>
-      <nodes xmi:type="mdxp_RouteToSubSystem.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="516,111">
+      <nodes xmi:type="mdxp_RouteToSubSystem.subflow:FCMComposite_1" xmi:id="FCMComposite_1_1" location="615,107">
         <translation xmi:type="utility:ConstantString" string="RouteToQ"/>
+      </nodes>
+      <nodes xmi:type="mdxp_InternalPusblish.subflow:FCMComposite_1" xmi:id="FCMComposite_1_3" location="490,111">
+        <translation xmi:type="utility:ConstantString" string="InternalPusblish"/>
       </nodes>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.second" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
@@ -55,9 +58,11 @@
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.Output1" targetTerminalName="InTerminal.Input"/>
     </composition>
     <propertyOrganizer/>
     <stickyBoard/>

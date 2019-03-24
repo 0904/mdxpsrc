@@ -16,6 +16,10 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
         DECLARE SQLErrorText1   CHARACTER;   
         DECLARE SQLCode1        INTEGER;   
         DECLARE SQLNativeError1 INTEGER;
+        DECLARE ReceiverOrg     CHARACTER;
+		DECLARE Receiver        CHARACTER;
+		DECLARE TargetInfo      ROW;
+		DECLARE TargetRequestQ  CHARACTER;
 
 		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
 		SET ServiceVersion = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Version);
@@ -38,22 +42,50 @@ CREATE COMPUTE MODULE mdxpwebservice_route_message
 		
 		SET ServiceUrl = ServiceInfo.Service.URL;		
 		IF ServiceUrl IS NULL OR TRIM(ServiceUrl) = '' THEN
-			-- response code 204 if no service 
-			SET ResponseCode = 204;
-			SET ResponseMsg = 'The URL of service (' || ServiceCode || ') is not found in service info table in mdxp.';
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-			SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
-			PROPAGATE TO TERMINAL 'failure';
-			RETURN FALSE;
+			
+			IF EXISTS(OutputRoot.MQMD[]) IS FALSE THEN			
+                -- response code 204 if no service 
+			    SET ResponseCode = 204;
+			    SET ResponseMsg = 'The URL of service (' || ServiceCode || ') is not found in service info table in mdxp.';
+			    SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+			    SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			    SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			    PROPAGATE TO TERMINAL 'failure';
+			    RETURN FALSE;
+			ELSE 
+				SET ReceiverOrg = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Receiver_Org);
+		        SET Receiver = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_Receiver);
+		        
+		        SET Servicesql = 'SELECT TARGET_REQUEST_QUEUE FROM ESB.TARGET_QUEUE_CONFIG WHERE RECEIVER_ORG=? AND RECEIVER=? FETCH FIRST 1 ROW ONLY';
+		        SET TargetInfo.Target[] = PASSTHRU(Servicesql, ReceiverOrg, Receiver);
+		        SET TargetRequestQ = TRIM(TargetInfo.Target.TARGET_REQUEST_QUEUE);
+		        
+		        IF TargetRequestQ IS NULL OR TargetRequestQ = '' THEN
+		        	SET ResponseCode = 204;
+			        SET ResponseMsg = 'The request queue of  (' || Receiver || ') cannot be routed.';
+			        SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+			        SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+			        SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+			        PROPAGATE TO TERMINAL 'failure';
+			        RETURN FALSE;				    
+		        ELSE
+		        	SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetRequestQ;	
+		        	PROPAGATE TO TERMINAL 'out1';
+			        RETURN FALSE;	        	
+		        END IF;
+		        
+			END IF;
 		ELSE
 			-- set request URL
 			SET OutputLocalEnvironment.Destination.HTTP.RequestURL = ServiceUrl;
 			-- set message to localenv
 			SET OutputLocalEnvironment.output = OutputRoot;
 			-- set token
-			CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
-			SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
+			IF EXISTS(OutputRoot.MQMD[]) IS TRUE THEN
+				CREATE PREVIOUSSIBLING OF OutputRoot.XMLNSC NAME 'HTTPRequestHeader';
+			    SET OutputRoot.HTTPRequestHeader.Authorization = 'Bearer QWRtaW4tZjJlNTVjZTEtYzk4NC00MzgzLTkxYjctMGRlNGRjNmExNjgx';
+			END IF;
+
 			RETURN TRUE;
 		END IF;
 	END;

@@ -59,15 +59,15 @@ CREATE COMPUTE MODULE RouteToSubSystem_RouteToQ
 		SET TargetType = TRIM(InputLocalEnvironment.TargetType);
 		
 		IF TargetType = 'TOPIC' THEN
-			SET TargetTopicQ = TargetInfo.Target.TARGET_TOPIC_QUEUE;
-			IF TargetTopicQ IS NULL OR TRIM(TargetTopicQ) = '' THEN
+			SET TargetTopicQ = TRIM(TargetInfo.Target.TARGET_TOPIC_QUEUE);
+			IF TargetTopicQ IS NULL OR TargetTopicQ = '' THEN
 				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_S';
 			ELSE
 				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetTopicQ;
 			END IF;
 		ELSE 
-			SET TargetResQ = TargetInfo.Target.TARGET_RESPONSE_QUEUE;
-			IF TargetResQ IS NULL OR TRIM(TargetResQ) = '' THEN
+			SET TargetResQ = TRIM(TargetInfo.Target.TARGET_RESPONSE_QUEUE);
+			IF TargetResQ IS NULL OR TargetResQ = '' THEN
 				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'LQ_MDXP_TO_SUBSYS_R';
 			ELSE
 				SET InputLocalEnvironment.Destination.MQ.DestinationData.queueName = TargetResQ;

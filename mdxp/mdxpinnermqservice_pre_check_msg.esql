@@ -41,16 +41,16 @@ CREATE COMPUTE MODULE mdxpinnermqservice_pre_check_msg
 		
 		-- validate FTRQ
 		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
-		IF ENDSWITH(ServiceCode,'_IFRQ') THEN
-			IF EXISTS(OutputRoot.MQMD[]) IS FALSE THEN		
-				SET ResponseCode = 208;
-				SET ResponseMsg = '全表请求只能通过MQ通道处理';
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
-				SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
-				RETURN FALSE;
-			END IF;
-		END IF;
+		--IF ENDSWITH(ServiceCode,'_IFRQ') THEN
+		--	IF EXISTS(OutputRoot.MQMD[]) IS FALSE THEN		
+		--		SET ResponseCode = 208;
+		--		SET ResponseMsg = '全表请求只能通过MQ通道处理';
+		--		SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateCode = CAST(ResponseCode AS CHARACTER);
+		--		SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateDesc = ResponseMsg;
+		--		SET OutputRoot.XMLNSC.Msg.Body.Response.Svc_StateTime = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyyMMddHHMMssSSS');
+		--		RETURN FALSE;
+		--	END IF;
+		--END IF;
 		
 		-- validate service code
 		SET ServiceCode = TRIM(InputRoot.XMLNSC.Msg.Head.Svc_ServiceCode);
